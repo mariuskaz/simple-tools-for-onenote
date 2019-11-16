@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" loadImage="OnGetImage">
+  <ribbon>
+    <tabs>
+      <tab idMso="TabInsert">
+        <group id="grpCustomCharts" label="Charts">
+          <button id="btnSimpleGantt" label="Simple Gantt" size="large" onAction="SimpleGantt" imageMso="ProjectManageDependenciesOnDeliverables"  screentip="Add or refresh simple gantt." />
+        </group >
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
