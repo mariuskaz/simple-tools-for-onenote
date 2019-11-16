@@ -223,7 +223,6 @@ namespace OneNoteRibbonAddIn
                 {
                     if (start + duration - 1 > maxPeriod) maxPeriod = start + duration - 1;
                 }
-
                 if (col == _cols) col = 0;
             }
             
@@ -233,7 +232,23 @@ namespace OneNoteRibbonAddIn
             var cells = doc.Descendants(ns + "Table").First().Descendants(ns + "Cell");
             foreach (var cell in cells)
             {
-
+                col++;
+                if (col == startColumn) Int32.TryParse(cell.Value, out start);
+                if (col == durationColumn) Int32.TryParse(cell.Value, out duration);
+                var color = cell.Attribute("shadingColor");
+                if (color != null) cell.Attribute("shadingColor").Remove();
+                //MessageBox.Show(col.ToString() + ". "+cell.Value + ": " + start.ToString() + "-" + duration.ToString()+" "+color);
+                var finish = start + duration - 1;
+                var current = col - 4;
+                if (col > 4 & current >= start & current <= finish)
+                {
+                    cell.Add(new XAttribute("shadingColor", "#CCC1D9"));
+                }
+                else if (col > 4)
+                {
+                    if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
+                }
+                if (col == cols) col = 0;
             }
 
             doc.Save("D:/doc.xml");
@@ -261,7 +276,7 @@ namespace OneNoteRibbonAddIn
                 foreach (var row in rows)
                 {
                     r++;
-                    if (r > 1) txt = "";
+                    if (r > 1) txt = " ";
                     var cell = new XElement(ns + "Cell",
                         new XElement(ns + "OEChildren",
                             new XElement(ns + "OE",
@@ -271,7 +286,7 @@ namespace OneNoteRibbonAddIn
                             )
                         )
                     );
-                    if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
+                    //if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
                     row.Add(cell);
                 }
 
