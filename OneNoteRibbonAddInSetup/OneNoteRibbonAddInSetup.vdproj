@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_358D18070643FAE1311B1797084983E1"
-        "OwnerKey" = "8:_B65FFB41969A4D9D8409F177CF207B97"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_B65FFB41969A4D9D8409F177CF207B97"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -126,26 +120,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_358D18070643FAE1311B1797084983E1"
-            {
-            "SourcePath" = "8:OneNoteRibbonAddIn.tlb"
-            "TargetName" = "8:OneNoteRibbonAddIn.tlb"
-            "Tag" = "8:"
-            "Folder" = "8:_45C1E21BA8474A4EAF131C877200CAE8"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
         }
         "FileType"
         {
@@ -201,9 +175,9 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:OneNoteRibbonAddInSetup"
+        "ProductName" = "8:Simple Gantt for OneNote"
         "ProductCode" = "8:{81F0F097-6F95-4E2E-B281-40AC97B0399E}"
-        "PackageCode" = "8:{F1999265-E842-4E7B-A812-BB25544A0D92}"
+        "PackageCode" = "8:{9EA2C13C-BC29-45E1-AAC2-1F0BED60654A}"
         "UpgradeCode" = "8:{251EFAFA-11DF-40A1-BCCD-184490EB1259}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -214,11 +188,11 @@
         "Manufacturer" = "8:ARDI LT"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:OneNoteRibbonAddInSetup"
+        "Title" = "8:Simple Gantt for OneNote Setup"
         "Subject" = "8:"
         "ARPCONTACT" = "8:Marius K."
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:"
+        "ARPCOMMENTS" = "8:Simple Gantt for OneNote"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -418,7 +392,7 @@
                                                                     "Condition" = "8:"
                                                                     "Transitive" = "11:FALSE"
                                                                     "ValueTypes" = "3:1"
-                                                                    "Value" = "8:OneNote 2013 Ribbon Add-In Example"
+                                                                    "Value" = "8:OneNote 2013 Ribbon Add-In"
                                                                     }
                                                                     "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3345F2FF0D074C39AB24BF87ADF5DF98"
                                                                     {
@@ -426,7 +400,7 @@
                                                                     "Condition" = "8:"
                                                                     "Transitive" = "11:FALSE"
                                                                     "ValueTypes" = "3:1"
-                                                                    "Value" = "8:OneNoteRibbonAddIn"
+                                                                    "Value" = "8:SimpleGanttForOneNote"
                                                                     }
                                                                     "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6A3B7DCFD5CA4477A53F52220498A039"
                                                                     {
@@ -976,7 +950,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B65FFB41969A4D9D8409F177CF207B97"
             {
-            "SourcePath" = "8:..\\OneNoteRibbonAddIn\\obj\\Debug\\OneNoteRibbonAddIn.dll"
+            "SourcePath" = "8:..\\OneNoteRibbonAddIn\\obj\\Release\\OneNoteRibbonAddIn.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_45C1E21BA8474A4EAF131C877200CAE8"
