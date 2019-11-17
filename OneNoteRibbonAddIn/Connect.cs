@@ -10,6 +10,7 @@ using OneNoteRibbonAddIn.Properties;
 using System.Windows.Forms;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace OneNoteRibbonAddIn
 {
@@ -59,7 +60,7 @@ namespace OneNoteRibbonAddIn
         XDocument doc;
         XNamespace ns;
         XElement gantt;
-        XElement ganttStart;
+        DateTime ganttStart;
         String style;
         
         public void SimpleGantt(IRibbonControl control)
@@ -227,6 +228,7 @@ namespace OneNoteRibbonAddIn
             }
 
             gantt = gantts.ElementAt(0);
+            ganttStart = new DateTime();
 
             var dates = from oe in doc.Descendants(ns + "OE")
                      from item in oe.Elements(ns + "Meta")
@@ -234,10 +236,7 @@ namespace OneNoteRibbonAddIn
                      select oe;
 
             if (dates.Count() > 0)
-            {
-                ganttStart = dates.ElementAt(0);
-                MessageBox.Show("start: " + ganttStart.Value);
-            }
+                DateTime.TryParse(dates.ElementAt(0).Value.Substring(8), out ganttStart);
 
             // CALC COLUMNS //
 
@@ -311,13 +310,16 @@ namespace OneNoteRibbonAddIn
                 columns.Add(column);
 
                 var rows = gantt.Elements(ns + "Table").First().Descendants(ns + "Row");
-                var r = 0;
-                var txt = col.ToString();
-                
+
+                String txt = col.ToString();
+                if (ganttStart != new DateTime())
+                {
+                    var date = ganttStart.AddDays(col - 1);
+                    txt = date.Month.ToString() + "." + date.Day.ToString();
+                }
+
                 foreach (var row in rows)
                 {
-                    r++;
-                    if (r > 1) txt = " ";
                     var cell = new XElement(ns + "Cell",
                         new XElement(ns + "OEChildren",
                             new XElement(ns + "OE",
@@ -328,6 +330,7 @@ namespace OneNoteRibbonAddIn
                         )
                     );
                     row.Add(cell);
+                    txt = " ";
                 }
 
             }
