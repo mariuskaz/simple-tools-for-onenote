@@ -58,6 +58,8 @@ namespace OneNoteRibbonAddIn
 
         XDocument doc;
         XNamespace ns;
+        XElement gantt;
+        XElement ganttStart;
         String style;
         
         public void SimpleGantt(IRibbonControl control)
@@ -72,10 +74,13 @@ namespace OneNoteRibbonAddIn
             doc = XDocument.Parse(xml);
             ns = doc.Root.Name.Namespace;
             style = "font-family:Calibri;font-size:9.0pt;";
-            doc.Save("D:/one.xml");
 
-            // OUTLINE //
-            if (doc.Descendants(ns + "Table").Count() == 0)
+            var gantts = from oe in doc.Descendants(ns + "OE")
+                             from item in oe.Elements(ns + "Meta")
+                                where item.Attribute("name").Value == "SimpleGanttTable"
+                                    select oe;
+ 
+            if (gantts.Count() == 0)
             {
                 var outline = new XElement(ns + "Outline",
                     new XElement(ns + "Position",
@@ -89,15 +94,27 @@ namespace OneNoteRibbonAddIn
                     ),
                     new XElement(ns + "OEChildren",
                         new XElement(ns + "OE",
+                            new XElement(ns + "Meta",
+                                new XAttribute("name", "SimpleGanttStart"),
+                                new XAttribute("content", "")
+                            ),
                             new XElement(ns + "T", new XCData("Startas: " + DateTime.Now.ToString("yyyy.MM.dd")))
                         ),
                         new XElement(ns + "OE",
+                        new XElement(ns + "Meta",
+                                new XAttribute("name", "SimpleGanttFinish"),
+                                new XAttribute("content", "")
+                            ),
                             new XElement(ns + "T", new XCData("Pabaiga: " + DateTime.Now.ToString("yyyy.MM.dd")))
                         ),
                         new XElement(ns + "OE",
                             new XElement(ns + "T", new XCData(""))
                         ),
                         new XElement(ns + "OE",
+                            new XElement(ns + "Meta",
+                                new XAttribute("name", "SimpleGanttTable"),
+                                new XAttribute("content", "")
+                            ),
                             new XElement(ns + "Table",
                                 new XAttribute("bordersVisible", "true"),
                                 new XAttribute("hasHeaderRow", "true"),
@@ -202,19 +219,39 @@ namespace OneNoteRibbonAddIn
                 var page = doc.Descendants(ns + "Page").First();
                 page.Add(outline);
 
+                gantts = from oe in doc.Descendants(ns + "OE")
+                         from item in oe.Elements(ns + "Meta")
+                         where item.Attribute("name").Value == "SimpleGanttTable"
+                         select oe;
+
             }
-            
-            int cols = doc.Descendants(ns + "Table").First().Descendants(ns+"Column").Count();
-            int _cols = cols;
+
+            gantt = gantts.ElementAt(0);
+
+            var dates = from oe in doc.Descendants(ns + "OE")
+                     from item in oe.Elements(ns + "Meta")
+                     where item.Attribute("name").Value == "SimpleGanttStart"
+                     select oe;
+
+            if (dates.Count() > 0)
+            {
+                ganttStart = dates.ElementAt(0);
+                MessageBox.Show("start: " + ganttStart.Value);
+            }
+
+            // CALC COLUMNS //
 
             int startColumn = 2;
             int durationColumn = 3;
-            int col = 0;
             int start = 0;
             int duration = 0;
             int maxPeriod = 0;
 
-            var items = doc.Descendants(ns + "Table").First().Descendants(ns + "Cell");
+            var items = gantt.Elements(ns + "Table").First().Descendants(ns + "Cell");
+            int cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
+            int _cols = cols;
+            int col = 0;
+
             foreach (var item in items)
             {
                 col++;
@@ -225,11 +262,15 @@ namespace OneNoteRibbonAddIn
                 }
                 if (col == _cols) col = 0;
             }
-            
-            addColumns(maxPeriod + 4 - cols);
-            cols = doc.Descendants(ns + "Table").First().Descendants(ns + "Column").Count();
 
-            var cells = doc.Descendants(ns + "Table").First().Descendants(ns + "Cell");
+            // ADD COLUMNS//
+
+            addGanttColumns(maxPeriod + 4 - cols);
+            cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
+
+            // ADD COLORS //
+
+            var cells = gantt.Elements(ns + "Table").First().Descendants(ns + "Cell");
             foreach (var cell in cells)
             {
                 col++;
@@ -255,13 +296,13 @@ namespace OneNoteRibbonAddIn
 
         }
 
-        public void addColumns(int cols)
+        public void addGanttColumns(int cols)
         {
             for (var c = 0; c < cols; c++)
             {
-                int col = doc.Descendants(ns + "Table").First().Descendants(ns + "Column").Count() - 3;
+                int col = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count() - 3;
                 int index = col + 3;
-                var columns = doc.Descendants(ns + "Table").First().Descendants(ns + "Columns").First();
+                var columns = gantt.Elements(ns + "Table").First().Descendants(ns + "Columns").First();
                 var column = new XElement(ns + "Column",
                     new XAttribute("index", index.ToString()),
                     new XAttribute("width", "20.0"),
@@ -269,7 +310,7 @@ namespace OneNoteRibbonAddIn
                 );
                 columns.Add(column);
 
-                var rows = doc.Descendants(ns + "Table").First().Descendants(ns + "Row");
+                var rows = gantt.Elements(ns + "Table").First().Descendants(ns + "Row");
                 var r = 0;
                 var txt = col.ToString();
                 
@@ -286,7 +327,6 @@ namespace OneNoteRibbonAddIn
                             )
                         )
                     );
-                    //if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
                     row.Add(cell);
                 }
 
