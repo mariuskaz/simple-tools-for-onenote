@@ -106,7 +106,7 @@ namespace OneNoteRibbonAddIn
                                 new XAttribute("name", "SimpleGanttFinish"),
                                 new XAttribute("content", "")
                             ),
-                            new XElement(ns + "T", new XCData("Pabaiga: " + DateTime.Now.ToString("yyyy.MM.dd")))
+                            new XElement(ns + "T", new XCData("Terminas: " + DateTime.Now.ToString("yyyy.MM.dd")))
                         ),
                         new XElement(ns + "OE",
                             new XElement(ns + "T", new XCData(""))
