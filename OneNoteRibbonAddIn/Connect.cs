@@ -237,7 +237,6 @@ namespace OneNoteRibbonAddIn
                 if (col == durationColumn) Int32.TryParse(cell.Value, out duration);
                 var color = cell.Attribute("shadingColor");
                 if (color != null) cell.Attribute("shadingColor").Remove();
-                //MessageBox.Show(col.ToString() + ". "+cell.Value + ": " + start.ToString() + "-" + duration.ToString()+" "+color);
                 var finish = start + duration - 1;
                 var current = col - 4;
                 if (col > 4 & current >= start & current <= finish)
@@ -261,9 +260,10 @@ namespace OneNoteRibbonAddIn
             for (var c = 0; c < cols; c++)
             {
                 int col = doc.Descendants(ns + "Table").First().Descendants(ns + "Column").Count() - 3;
+                int index = col + 3;
                 var columns = doc.Descendants(ns + "Table").First().Descendants(ns + "Columns").First();
                 var column = new XElement(ns + "Column",
-                    new XAttribute("index", "4"),
+                    new XAttribute("index", index.ToString()),
                     new XAttribute("width", "20.0"),
                     new XAttribute("isLocked", "true")
                 );

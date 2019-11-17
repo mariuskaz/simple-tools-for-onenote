@@ -4,7 +4,7 @@
     <tabs>
       <tab idMso="TabInsert">
         <group id="grpCustomCharts" label="Charts">
-          <button id="btnSimpleGantt" label="Simple Gantt" size="large" onAction="SimpleGantt" imageMso="ProjectManageDependenciesOnDeliverables"  screentip="Add or refresh simple gantt." />
+          <button id="btnSimpleGantt" label="Simple Gantt" size="large" onAction="SimpleGantt" imageMso="ProjectManageDependenciesOnDeliverables"  screentip="Insert or update simple gantt." />
         </group >
       </tab>
     </tabs>
