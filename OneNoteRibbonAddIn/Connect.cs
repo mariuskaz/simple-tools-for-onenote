@@ -186,7 +186,7 @@ namespace OneNoteRibbonAddIn
                                     new XElement(ns + "Cell",
                                         new XElement(ns + "OEChildren",
                                             new XElement(ns + "OE",
-                                                new XElement(ns + "T", new XCData("Uzregistruoti MS"))
+                                                new XElement(ns + "T", new XCData("Užduotis 1"))
                                             )
                                         )
                                     ),
@@ -290,7 +290,7 @@ namespace OneNoteRibbonAddIn
                 if (col == cols) col = 0;
             }
 
-            doc.Save("D:/doc.xml");
+            //doc.Save("D:/doc.xml");
             onenote.UpdatePageContent(doc.ToString());
 
         }
