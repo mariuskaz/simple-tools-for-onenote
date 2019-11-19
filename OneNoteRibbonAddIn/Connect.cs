@@ -11,6 +11,9 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Xml.Linq;
 using System.Globalization;
+//using System.Net;
+using Flurl.Http;
+using Flurl;
 using System.Net;
 
 namespace OneNoteRibbonAddIn
@@ -19,6 +22,7 @@ namespace OneNoteRibbonAddIn
     public class Connect : IRibbonExtensibility, IDTExtensibility2
     {
         private object _applicationObject;
+        private String token = "c011a6914a334f7fba3f4b4b0d088bb5382eb790";
 
         public string GetCustomUI(string ribbonId)
         {
@@ -339,7 +343,7 @@ namespace OneNoteRibbonAddIn
 
 
 
-        public void ExportTasks(IRibbonControl control)
+        public async void ExportTasks(IRibbonControl control)
         {
             String xml;
             Microsoft.Office.Interop.OneNote.Application onenote = new Microsoft.Office.Interop.OneNote.Application();
@@ -355,7 +359,7 @@ namespace OneNoteRibbonAddIn
                        from item in oe.Elements(ns + "Tag")
                        where item.Attribute("index").Value == "0"
                        where item.Attribute("completed").Value == "false"
-                       select oe; 
+                       select oe;
 
             String info = "";
             foreach (var tag in tags)
@@ -364,20 +368,49 @@ namespace OneNoteRibbonAddIn
 
             }
 
-            string caption = "Add tasks to Todoist";
-            MessageBoxButtons buttons = MessageBoxButtons.YesNo;
+            string caption = "Add tasks to Todoist:";
+            MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
             DialogResult result;
-        
+
             result = MessageBox.Show(info, caption, buttons);
 
-            if (result == DialogResult.Yes)
+            if (result == DialogResult.OK)
             {
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+                try
+                {
+
+                    // https://stackoverflow.com/questions/4015324/how-to-make-http-post-web-request
+
+                    //string res = await "https://google.lt".GetStringAsync();
+                    //MessageBox.Show(token);
+
+                    string response = await "https://api.todoist.com/rest/v1/projects"
+                    //.WithHeaders(new { Authorization = "Bearer c011a6914a334f7fba3f4b4b0d088bb5382eb790" })
+                    .WithHeader("Authorization", "Bearer c011a6914a334f7fba3f4b4b0d088bb5382eb790" )
+                    //.WithOAuthBearerToken(token)
+                    .PostJsonAsync(new { name = "naujas projektas" })
+                    .ReceiveString();
+                }
+                catch (FlurlHttpTimeoutException)
+                {
+                    MessageBox.Show("Request timed out.");
+                }
+
+                catch (FlurlHttpException ex)
+                {
+                    // ex.Message contains rich details, inclulding the URL, verb, response status,
+                    // and request and response bodies (if available)
+                    MessageBox.Show(ex.Message + "\n" + ex.Source);
+                }
 
                 System.Diagnostics.Process.Start("https://todoist.com");
 
             }
 
-           
+
 
         }
 
