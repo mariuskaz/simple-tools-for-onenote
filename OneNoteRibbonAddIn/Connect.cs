@@ -11,10 +11,8 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Xml.Linq;
 using System.Globalization;
-//using System.Net;
-using Flurl.Http;
-using Flurl;
 using System.Net;
+using Todoist.Net;
 
 namespace OneNoteRibbonAddIn
 {
@@ -22,7 +20,7 @@ namespace OneNoteRibbonAddIn
     public class Connect : IRibbonExtensibility, IDTExtensibility2
     {
         private object _applicationObject;
-        private String token = "c011a6914a334f7fba3f4b4b0d088bb5382eb790";
+        private String API_token = "c011a6914a334f7fba3f4b4b0d088bb5382eb790";
 
         public string GetCustomUI(string ribbonId)
         {
@@ -355,16 +353,18 @@ namespace OneNoteRibbonAddIn
             doc = XDocument.Parse(xml);
             ns = doc.Root.Name.Namespace;
 
-            var tags = from oe in doc.Descendants(ns + "OE")
+            var title = doc.Descendants(ns + "Title").First().Value;
+
+            var tasks = from oe in doc.Descendants(ns + "OE")
                        from item in oe.Elements(ns + "Tag")
                        where item.Attribute("index").Value == "0"
                        where item.Attribute("completed").Value == "false"
                        select oe;
 
-            String info = "";
-            foreach (var tag in tags)
+            String info = title + "\n\n";
+            foreach (var task in tasks)
             {
-                info = info + "o  " + tag.Value + "\n";
+                info = info + "o  " + task.Value + "\n";
 
             }
 
@@ -377,34 +377,23 @@ namespace OneNoteRibbonAddIn
             if (result == DialogResult.OK)
             {
 
+                //https://github.com/olsh/todoist-net //
+
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                ITodoistClient client = new TodoistClient(API_token);
 
-                try
+                var transaction = client.CreateTransaction();
+                var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
+                foreach (var task in tasks)
                 {
-
-                    // https://stackoverflow.com/questions/4015324/how-to-make-http-post-web-request
-
-                    //string res = await "https://google.lt".GetStringAsync();
-                    //MessageBox.Show(token);
-
-                    string response = await "https://api.todoist.com/rest/v1/projects"
-                    //.WithHeaders(new { Authorization = "Bearer c011a6914a334f7fba3f4b4b0d088bb5382eb790" })
-                    .WithHeader("Authorization", "Bearer c011a6914a334f7fba3f4b4b0d088bb5382eb790" )
-                    //.WithOAuthBearerToken(token)
-                    .PostJsonAsync(new { name = "naujas projektas" })
-                    .ReceiveString();
-                }
-                catch (FlurlHttpTimeoutException)
-                {
-                    MessageBox.Show("Request timed out.");
+                    var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(task.Value, projectId));
+                    //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
                 }
 
-                catch (FlurlHttpException ex)
-                {
-                    // ex.Message contains rich details, inclulding the URL, verb, response status,
-                    // and request and response bodies (if available)
-                    MessageBox.Show(ex.Message + "\n" + ex.Source);
-                }
+                await transaction.CommitAsync();
+
+
+
 
                 System.Diagnostics.Process.Start("https://todoist.com");
 
