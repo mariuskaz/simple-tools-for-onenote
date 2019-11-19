@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Net;
 
 namespace OneNoteRibbonAddIn
 {
@@ -49,9 +50,9 @@ namespace OneNoteRibbonAddIn
         public IStream OnGetImage(string imageName)
         {
             MemoryStream stream = new MemoryStream();
-            if (imageName == "showform.png")
+            if (imageName == "todoist.png")
             {
-                Resources.showform.Save(stream, ImageFormat.Png);
+                Resources.todoist.Save(stream, ImageFormat.Png);
             }
 
             return new ReadOnlyIStreamWrapper(stream);
@@ -334,6 +335,50 @@ namespace OneNoteRibbonAddIn
                 }
 
             }
+        }
+
+
+
+        public void ExportTasks(IRibbonControl control)
+        {
+            String xml;
+            Microsoft.Office.Interop.OneNote.Application onenote = new Microsoft.Office.Interop.OneNote.Application();
+            string thisNoteBook = onenote.Windows.CurrentWindow.CurrentNotebookId;
+            string thisSection = onenote.Windows.CurrentWindow.CurrentSectionId;
+            string thisPage = onenote.Windows.CurrentWindow.CurrentPageId;
+            onenote.GetPageContent(thisPage, out xml);
+
+            doc = XDocument.Parse(xml);
+            ns = doc.Root.Name.Namespace;
+
+            var tags = from oe in doc.Descendants(ns + "OE")
+                       from item in oe.Elements(ns + "Tag")
+                       where item.Attribute("index").Value == "0"
+                       where item.Attribute("completed").Value == "false"
+                       select oe; 
+
+            String info = "";
+            foreach (var tag in tags)
+            {
+                info = info + "o  " + tag.Value + "\n";
+
+            }
+
+            string caption = "Add tasks to Todoist";
+            MessageBoxButtons buttons = MessageBoxButtons.YesNo;
+            DialogResult result;
+        
+            result = MessageBox.Show(info, caption, buttons);
+
+            if (result == DialogResult.Yes)
+            {
+
+                System.Diagnostics.Process.Start("https://todoist.com");
+
+            }
+
+           
+
         }
 
 

@@ -71,8 +71,11 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\todoist.png" />
     <None Include="README.md" />
-    <None Include="Resources\customUI.xml" />
+    <None Include="Resources\customUI.xml">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="Resources\showform.png" />
   </ItemGroup>
   <ItemGroup>
