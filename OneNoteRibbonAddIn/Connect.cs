@@ -13,6 +13,8 @@ using System.Xml.Linq;
 using System.Globalization;
 using System.Net;
 using Todoist.Net;
+using System.Text.RegularExpressions;
+
 
 namespace OneNoteRibbonAddIn
 {
@@ -317,8 +319,9 @@ namespace OneNoteRibbonAddIn
                 String txt = col.ToString();
                 if (ganttStart != new DateTime())
                 {
-                    var date = ganttStart.AddDays(col - 1);
-                    txt = date.Month.ToString() + "." + date.Day.ToString();
+                    //var date = ganttStart.AddDays(col - 1);
+                    //txt = date.Month.ToString() + "." + date.Day.ToString();
+                    txt = col.ToString();
                 }
 
                 foreach (var row in rows)
@@ -343,68 +346,108 @@ namespace OneNoteRibbonAddIn
 
         public async void ExportTasks(IRibbonControl control)
         {
-            String xml;
+            Window context = control.Context as Window;
+            CWin32WindowWrapper owner = new CWin32WindowWrapper((IntPtr)context.WindowHandle);
+
             Microsoft.Office.Interop.OneNote.Application onenote = new Microsoft.Office.Interop.OneNote.Application();
             string thisNoteBook = onenote.Windows.CurrentWindow.CurrentNotebookId;
             string thisSection = onenote.Windows.CurrentWindow.CurrentSectionId;
-            string thisPage = onenote.Windows.CurrentWindow.CurrentPageId;
-            onenote.GetPageContent(thisPage, out xml);
+            string thisPage = onenote.Windows.CurrentWindow.CurrentPageId;            
 
-            doc = XDocument.Parse(xml);
+            String link;
+            onenote.GetHyperlinkToObject(thisPage, System.String.Empty, out link);
+
+            String xmlNotebooks;
+            onenote.GetHierarchy(null,
+               Microsoft.Office.Interop.OneNote.HierarchyScope.hsPages, out xmlNotebooks);
+
+            var notebooks = XDocument.Parse(xmlNotebooks);
+
+            var currentbook = from item in notebooks.Descendants(notebooks.Root.Name.Namespace + "Notebook")
+                                where item.Attribute("ID").Value == thisNoteBook
+                                    select item;
+
+            var notebook = currentbook.First().Attribute("name").Value;
+
+            String xmlPage;
+            onenote.GetPageContent(thisPage, out xmlPage);
+            doc = XDocument.Parse(xmlPage);
             ns = doc.Root.Name.Namespace;
+            //doc.Save("D:/test.xml");
 
-            var title = doc.Descendants(ns + "Title").First().Value;
+            var title = notebook + ": " + RemoveHtmlTags(doc.Descendants(ns+"Title").First().Value);
 
-            var tasks = from oe in doc.Descendants(ns + "OE")
-                       from item in oe.Elements(ns + "Tag")
-                       where item.Attribute("index").Value == "0"
-                       where item.Attribute("completed").Value == "false"
-                       select oe;
+            var tags = from tagDef in doc.Descendants(ns + "TagDef")
+                            where tagDef.Attribute("symbol").Value == "3"
+                                    select tagDef;
 
-            String info = title + "\n\n";
-            foreach (var task in tasks)
+            if (tags.Count() == 0)
+
             {
-                info = info + "o  " + task.Value + "\n";
-
+                MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
 
-            string caption = "Add tasks to Todoist:";
-            MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
-            DialogResult result;
+            else
 
-            result = MessageBox.Show(info, caption, buttons);
-
-            if (result == DialogResult.OK)
             {
 
-                //https://github.com/olsh/todoist-net //
+                var index = tags.First().Attribute("index").Value;
+                var tasks = from oe in doc.Descendants(ns + "OE")
+                                from item in oe.Elements(ns + "Tag")
+                                    where item.Attribute("index").Value == index
+                                    where item.Attribute("completed").Value == "false"
+                                        select oe;
+                if (tasks.Count() == 0)
+                {
+                    MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+                    
 
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                ITodoistClient client = new TodoistClient(API_token);
-
-                var transaction = client.CreateTransaction();
-                var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
+                string info = "";
+                string prefix = title;
+                if (prefix.Length > 60) prefix = prefix.Substring(0, 60);
                 foreach (var task in tasks)
                 {
-                    var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(task.Value, projectId));
-                    //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                    info = info + "O   " + prefix + "\n      " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
+                }
+                info = info + "\n       Add project with tasks to Todoist?";
+
+                MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
+                DialogResult result = MessageBox.Show(owner, info, "Tasks found:", buttons);
+
+                if (result == DialogResult.OK)
+                {
+
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    //ITodoistClient client = new TodoistClient(API_token);
+                    ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
+                    ITodoistClient client = await tokenlessClient.LoginAsync("marius@ardi.lt", "qazklik");
+
+                    var transaction = client.CreateTransaction();
+                    var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
+
+                    foreach (var task in tasks)
+                    {
+                        var content = "[" + title + " - " + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                        var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
+                        //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                    }
+
+                    await transaction.CommitAsync();
+                    System.Diagnostics.Process.Start("https://todoist.com");
+
                 }
 
-                await transaction.CommitAsync();
-
-
-
-
-                System.Diagnostics.Process.Start("https://todoist.com");
-
             }
-
-
 
         }
 
-
-
+        string RemoveHtmlTags(string html)
+        {
+            //return Regex.Replace(html, "<.+?>", string.Empty);
+            return Regex.Replace(html, @"<(.|\n)*?>", "");
+        }
 
 
     }
