@@ -22,7 +22,6 @@ namespace OneNoteRibbonAddIn
     public class Connect : IRibbonExtensibility, IDTExtensibility2
     {
         private object _applicationObject;
-        private String API_token = "c011a6914a334f7fba3f4b4b0d088bb5382eb790";
 
         public string GetCustomUI(string ribbonId)
         {
@@ -402,40 +401,58 @@ namespace OneNoteRibbonAddIn
                     MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
-                    
+
+               
 
                 string info = "";
+                int counter = 0;
                 string prefix = title;
                 if (prefix.Length > 60) prefix = prefix.Substring(0, 60);
                 foreach (var task in tasks)
                 {
-                    info = info + "O   " + prefix + "\n      " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
+                    counter++;
+                    if (counter < 15) info = info + "O   " + prefix + "\n      " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
+                    if (counter == 15) info = info + "...\n\n";
                 }
                 info = info + "\n       Add project with tasks to Todoist?";
 
                 MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
-                DialogResult result = MessageBox.Show(owner, info, "Tasks found:", buttons);
+                DialogResult result = MessageBox.Show(owner, info, "Tasks found: " +tasks.Count().ToString(), buttons);
 
                 if (result == DialogResult.OK)
                 {
 
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                    //ITodoistClient client = new TodoistClient(API_token);
-                    ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
-                    ITodoistClient client = await tokenlessClient.LoginAsync("marius@ardi.lt", "qazklik");
+                    LoginForm login = new LoginForm();
+                    login.ShowDialog(owner);
 
-                    var transaction = client.CreateTransaction();
-                    var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
-
-                    foreach (var task in tasks)
+                    if (login.DialogResult == DialogResult.OK)
                     {
-                        var content = "[" + title + " - " + RemoveHtmlTags(task.Value) + "](" + link + ")";
-                        var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
-                        //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                        ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
+                        try
+                        {
+                            ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
+
+                            var transaction = client.CreateTransaction();
+                            var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
+
+                            foreach (var task in tasks)
+                            {
+                                var content = "[" + title + " - " + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                                var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
+                                //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                            }
+
+                            await transaction.CommitAsync();
+                            System.Diagnostics.Process.Start("https://todoist.com");
+                        }
+                        catch {
+                            MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK,MessageBoxIcon.Error);
+                        }
                     }
 
-                    await transaction.CommitAsync();
-                    System.Diagnostics.Process.Start("https://todoist.com");
+                    login.Dispose();
+                    login = null;
 
                 }
 
