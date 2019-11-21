@@ -61,6 +61,11 @@ namespace OneNoteRibbonAddIn
             return new ReadOnlyIStreamWrapper(stream);
         }
 
+        public void InsertMonth(IRibbonControl control)
+        {
+            MessageBox.Show(DateTime.Now.ToString("MM"));
+        }
+
         XDocument doc;
         XNamespace ns;
         XElement gantt;
@@ -244,8 +249,10 @@ namespace OneNoteRibbonAddIn
 
             // CALC COLUMNS //
 
+            int taskColumn = 1;
             int startColumn = 2;
             int durationColumn = 3;
+            string taskName = "";
             int start = 0;
             int duration = 0;
             int maxPeriod = 0;
@@ -277,6 +284,7 @@ namespace OneNoteRibbonAddIn
             foreach (var cell in cells)
             {
                 col++;
+                if (col == taskColumn) taskName = cell.Value;
                 if (col == startColumn) Int32.TryParse(cell.Value, out start);
                 if (col == durationColumn) Int32.TryParse(cell.Value, out duration);
                 var color = cell.Attribute("shadingColor");
@@ -285,7 +293,14 @@ namespace OneNoteRibbonAddIn
                 var current = col - 4;
                 if (col > 4 & current >= start & current <= finish)
                 {
-                    cell.Add(new XAttribute("shadingColor", "#CCC1D9"));
+                    if (taskName == taskName.ToUpper())
+                    {
+                        cell.Add(new XAttribute("shadingColor", "#5F497A"));
+                    }
+                    else
+                    {
+                        cell.Add(new XAttribute("shadingColor", "#CCC1D9"));
+                    }
                 }
                 else if (col > 4)
                 {
@@ -372,9 +387,9 @@ namespace OneNoteRibbonAddIn
             onenote.GetPageContent(thisPage, out xmlPage);
             doc = XDocument.Parse(xmlPage);
             ns = doc.Root.Name.Namespace;
-            //doc.Save("D:/test.xml");
 
-            var title = notebook + ": " + RemoveHtmlTags(doc.Descendants(ns+"Title").First().Value);
+            var pageTitle = RemoveHtmlTags(doc.Descendants(ns + "Title").First().Value);
+            var title = notebook + ": " + pageTitle;
 
             var tags = from tagDef in doc.Descendants(ns + "TagDef")
                             where tagDef.Attribute("symbol").Value == "3"
@@ -383,7 +398,7 @@ namespace OneNoteRibbonAddIn
             if (tags.Count() == 0)
 
             {
-                MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
 
             else
@@ -398,28 +413,26 @@ namespace OneNoteRibbonAddIn
                                         select oe;
                 if (tasks.Count() == 0)
                 {
-                    MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
 
-               
-
-                string info = "";
-                int counter = 0;
+                string allTasks = "";
                 string prefix = title;
+                string formTitle = "Tasks found: " + tasks.Count().ToString();
                 if (prefix.Length > 60) prefix = prefix.Substring(0, 60);
+                int counter = 0;
                 foreach (var task in tasks)
                 {
                     counter++;
-                    if (counter < 15) info = info + "O   " + prefix + "\n      " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
-                    if (counter == 15) info = info + "...\n\n";
+                    allTasks += "o    " + prefix + "\n       " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
+                    if (counter > 4) break;
                 }
-                info = info + "\n       Add project with tasks to Todoist?";
 
-                MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
-                DialogResult result = MessageBox.Show(owner, info, "Tasks found: " +tasks.Count().ToString(), buttons);
+                TasksForm confirm = new OneNoteRibbonAddIn.TasksForm(formTitle, allTasks);
+                confirm.ShowDialog(owner);
 
-                if (result == DialogResult.OK)
+                if (confirm.DialogResult == DialogResult.OK)
                 {
 
                     LoginForm login = new LoginForm();
@@ -456,6 +469,8 @@ namespace OneNoteRibbonAddIn
 
                 }
 
+                confirm.Dispose();
+                confirm = null;
             }
 
         }

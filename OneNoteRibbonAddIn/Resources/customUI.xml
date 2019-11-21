@@ -4,12 +4,12 @@
     <tabs>
       <tab idMso="TabHome">
         <group id="grpTags" label="Tasks">
-          <button id="btnExportTasks" label="Add to Todoist" size="large" onAction="ExportTasks" image="todoist.png"  screentip="Export tasks to Todoist" />
+          <button id="btnExportTasks" label="Add to Todoist" size="large" onAction="ExportTasks" image="todoist.png"  screentip="Export tasks to Todoist" supertip="Find uncompleted tasks on current page and export them to new Todoist project."/>
         </group >
       </tab>
       <tab idMso="TabInsert">
         <group id="grpCustomCharts" label="Charts">
-          <button id="btnSimpleGantt" label="Simple Gantt" size="large" onAction="SimpleGantt" imageMso="ProjectManageDependenciesOnDeliverables"  screentip="Insert or update simple gantt" />
+          <button id="btnSimpleGantt" label="Simple Gantt" size="large" onAction="SimpleGantt" imageMso="ProjectManageDependenciesOnDeliverables"  screentip="Simple Gantt" supertip="Insert new simple Gantt or update existing one. Only one Gantt is active."/>
         </group >
       </tab>
     </tabs>
