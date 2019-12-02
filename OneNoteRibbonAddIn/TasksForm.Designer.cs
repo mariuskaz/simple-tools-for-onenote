@@ -28,22 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Tasks = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.txtProject = new System.Windows.Forms.TextBox();
+            this.txtPrefix = new System.Windows.Forms.TextBox();
+            this.txtTask = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.txtInfo = new System.Windows.Forms.Label();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // Tasks
-            // 
-            this.Tasks.AutoSize = true;
-            this.Tasks.Location = new System.Drawing.Point(12, 15);
-            this.Tasks.Name = "Tasks";
-            this.Tasks.Size = new System.Drawing.Size(54, 13);
-            this.Tasks.TabIndex = 0;
-            this.Tasks.Text = "O   Task1";
             // 
             // panel3
             // 
@@ -51,7 +47,7 @@
             this.panel3.Controls.Add(this.btnCancel);
             this.panel3.Controls.Add(this.btnOK);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 206);
+            this.panel3.Location = new System.Drawing.Point(0, 196);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(402, 56);
             this.panel3.TabIndex = 14;
@@ -65,7 +61,7 @@
             this.btnCancel.Location = new System.Drawing.Point(292, 13);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(98, 30);
-            this.btnCancel.TabIndex = 10;
+            this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -78,16 +74,83 @@
             this.btnOK.Location = new System.Drawing.Point(188, 13);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(98, 30);
-            this.btnOK.TabIndex = 9;
+            this.btnOK.TabIndex = 0;
             this.btnOK.Text = "Add tasks";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // txtProject
+            // 
+            this.txtProject.AcceptsReturn = true;
+            this.txtProject.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtProject.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.txtProject.HideSelection = false;
+            this.txtProject.Location = new System.Drawing.Point(27, 20);
+            this.txtProject.Multiline = true;
+            this.txtProject.Name = "txtProject";
+            this.txtProject.Size = new System.Drawing.Size(344, 50);
+            this.txtProject.TabIndex = 2;
+            this.txtProject.TabStop = false;
+            this.txtProject.Text = "Project";
+            // 
+            // txtPrefix
+            // 
+            this.txtPrefix.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtPrefix.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.txtPrefix.Location = new System.Drawing.Point(66, 76);
+            this.txtPrefix.Name = "txtPrefix";
+            this.txtPrefix.Size = new System.Drawing.Size(293, 15);
+            this.txtPrefix.TabIndex = 3;
+            this.txtPrefix.TabStop = false;
+            this.txtPrefix.Text = "Prefix";
+            // 
+            // txtTask
+            // 
+            this.txtTask.AutoSize = true;
+            this.txtTask.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.txtTask.Location = new System.Drawing.Point(63, 96);
+            this.txtTask.Name = "txtTask";
+            this.txtTask.Size = new System.Drawing.Size(33, 16);
+            this.txtTask.TabIndex = 17;
+            this.txtTask.Text = "task";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.label1.ForeColor = System.Drawing.Color.Gray;
+            this.label1.Location = new System.Drawing.Point(29, 73);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(31, 33);
+            this.label1.TabIndex = 18;
+            this.label1.Text = "o";
             // 
             // panel1
             // 
-            this.panel1.Location = new System.Drawing.Point(373, -1);
+            this.panel1.Location = new System.Drawing.Point(377, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(29, 205);
-            this.panel1.TabIndex = 15;
+            this.panel1.Size = new System.Drawing.Size(25, 186);
+            this.panel1.TabIndex = 19;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.label2.Location = new System.Drawing.Point(24, 160);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(186, 16);
+            this.label2.TabIndex = 20;
+            this.label2.Text = "Adjust project\'s title and tasks.";
+            // 
+            // txtInfo
+            // 
+            this.txtInfo.AutoSize = true;
+            this.txtInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.txtInfo.Location = new System.Drawing.Point(24, 142);
+            this.txtInfo.Name = "txtInfo";
+            this.txtInfo.Size = new System.Drawing.Size(95, 16);
+            this.txtInfo.TabIndex = 21;
+            this.txtInfo.Text = "Tasks found: 0";
             // 
             // TasksForm
             // 
@@ -95,17 +158,23 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(402, 262);
+            this.ClientSize = new System.Drawing.Size(402, 252);
+            this.Controls.Add(this.txtInfo);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.txtTask);
+            this.Controls.Add(this.txtPrefix);
+            this.Controls.Add(this.txtProject);
             this.Controls.Add(this.panel3);
-            this.Controls.Add(this.Tasks);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "TasksForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Tasks";
+            this.Text = "Template";
             this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -113,11 +182,15 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Label Tasks;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.TextBox txtProject;
+        private System.Windows.Forms.TextBox txtPrefix;
+        private System.Windows.Forms.Label txtTask;
+        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label txtInfo;
     }
 }

@@ -51,7 +51,6 @@
             this.txtLogin.Name = "txtLogin";
             this.txtLogin.Size = new System.Drawing.Size(200, 15);
             this.txtLogin.TabIndex = 4;
-            this.txtLogin.Text = "linas@ardi.lt";
             this.txtLogin.KeyUp += new System.Windows.Forms.KeyEventHandler(this.txtLogin_KeyUp);
             // 
             // txtPassword

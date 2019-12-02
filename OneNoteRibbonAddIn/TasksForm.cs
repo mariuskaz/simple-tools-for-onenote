@@ -15,17 +15,23 @@ namespace OneNoteRibbonAddIn
 {
     public partial class TasksForm : Form
     {
-        public TasksForm(string title, string tasks)
+        public string project;
+        public string prefix;
+
+        public TasksForm(string title, string project, string prefix, string task)
         {
             InitializeComponent();
             this.Text = title;
-            this.Tasks.Text = tasks;
+            this.txtInfo.Text = title;
+            this.txtProject.Text = project;
+            this.txtPrefix.Text = prefix +" - ";
+            this.txtTask.Text = task;
         }
 
-        string RemoveHtmlTags(string html)
+        private void btnOK_Click(object sender, EventArgs e)
         {
-            return Regex.Replace(html, @"<(.|\n)*?>", "");
+            project = txtProject.Text;
+            prefix = txtPrefix.Text;
         }
-
     }
 }

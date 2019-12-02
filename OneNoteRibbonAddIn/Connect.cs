@@ -74,6 +74,7 @@ namespace OneNoteRibbonAddIn
         
         public void SimpleGantt(IRibbonControl control)
         {
+         
             String xml;
             Microsoft.Office.Interop.OneNote.Application onenote = new Microsoft.Office.Interop.OneNote.Application();
             string thisNoteBook = onenote.Windows.CurrentWindow.CurrentNotebookId;
@@ -108,14 +109,14 @@ namespace OneNoteRibbonAddIn
                                 new XAttribute("name", "SimpleGanttStart"),
                                 new XAttribute("content", "")
                             ),
-                            new XElement(ns + "T", new XCData("Startas: " + DateTime.Now.ToString("yyyy.MM.dd")))
+                            new XElement(ns + "T", new XCData("Startas: ")) //DateTime.Now.ToString("yyyy.MM.dd")
                         ),
                         new XElement(ns + "OE",
                         new XElement(ns + "Meta",
                                 new XAttribute("name", "SimpleGanttFinish"),
                                 new XAttribute("content", "")
                             ),
-                            new XElement(ns + "T", new XCData("Terminas: " + DateTime.Now.ToString("yyyy.MM.dd")))
+                            new XElement(ns + "T", new XCData("Terminas: "))
                         ),
                         new XElement(ns + "OE",
                             new XElement(ns + "T", new XCData(""))
@@ -220,7 +221,41 @@ namespace OneNoteRibbonAddIn
                                             )
                                         )
                                     )
+                                ),
+
+
+                                new XElement(ns + "Row",
+                                    new XElement(ns + "Cell",
+                                        new XElement(ns + "OEChildren",
+                                            new XElement(ns + "OE",
+                                                new XElement(ns + "T", new XCData(""))
+                                            )
+                                        )
+                                    ),
+                                    new XElement(ns + "Cell",
+                                        new XElement(ns + "OEChildren",
+                                            new XElement(ns + "OE",
+                                                new XElement(ns + "T", new XCData(""))
+                                            )
+                                        )
+                                    ),
+                                    new XElement(ns + "Cell",
+                                        new XElement(ns + "OEChildren",
+                                            new XElement(ns + "OE",
+                                                new XElement(ns + "T", new XCData(""))
+                                            )
+                                        )
+                                    ),
+                                    new XElement(ns + "Cell",
+                                        new XElement(ns + "OEChildren",
+                                            new XElement(ns + "OE",
+                                                new XElement(ns + "T", new XCData(""))
+                                            )
+                                        )
+                                    )
                                 )
+
+
                             )
                         )
                     )
@@ -237,7 +272,6 @@ namespace OneNoteRibbonAddIn
             }
 
             gantt = gantts.ElementAt(0);
-            ganttStart = new DateTime();
 
             var dates = from oe in doc.Descendants(ns + "OE")
                      from item in oe.Elements(ns + "Meta")
@@ -245,7 +279,13 @@ namespace OneNoteRibbonAddIn
                      select oe;
 
             if (dates.Count() > 0)
-                DateTime.TryParse(dates.ElementAt(0).Value.Substring(8), out ganttStart);
+            {
+                var startas = RemoveHtmlTags(dates.ElementAt(0).Value).Substring(8).Trim();
+                DateTime.TryParse(startas, out ganttStart);
+                //MessageBox.Show(startas + " Start: " + ganttStart);
+            }
+
+            
 
             // CALC COLUMNS //
 
@@ -333,9 +373,8 @@ namespace OneNoteRibbonAddIn
                 String txt = col.ToString();
                 if (ganttStart != new DateTime())
                 {
-                    //var date = ganttStart.AddDays(col - 1);
-                    //txt = date.Month.ToString() + "." + date.Day.ToString();
-                    txt = col.ToString();
+                    var date = ganttStart.AddDays(col - 1);
+                    txt = Right("0"+date.Month.ToString(),2) + "." + Right("0"+date.Day.ToString(),2);
                 }
 
                 foreach (var row in rows)
@@ -356,7 +395,10 @@ namespace OneNoteRibbonAddIn
             }
         }
 
-
+        private string Right(string str, int x)
+        {
+            return str.Substring(str.Length - x);
+        }
 
         public async void ExportTasks(IRibbonControl control)
         {
@@ -406,11 +448,19 @@ namespace OneNoteRibbonAddIn
             {
 
                 var index = tags.First().Attribute("index").Value;
+                string[] allTags = new string[2];
+                int i = 0;
+                foreach (var tag in tags)
+                {
+                    allTags[i] = tag.Attribute("index").Value;
+                    i++;
+                }
                 var tasks = from oe in doc.Descendants(ns + "OE")
                                 from item in oe.Elements(ns + "Tag")
-                                    where item.Attribute("index").Value == index
-                                    where item.Attribute("completed").Value == "false"
-                                        select oe;
+                                    //where item.Attribute("index").Value == index
+                                    where allTags.Contains(item.Attribute("index").Value)
+                                        where item.Attribute("completed").Value == "false"
+                                            select oe;
                 if (tasks.Count() == 0)
                 {
                     MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -428,8 +478,9 @@ namespace OneNoteRibbonAddIn
                     allTasks += "o    " + prefix + "\n       " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
                     if (counter > 4) break;
                 }
+                string taskas = RemoveHtmlTags(tasks.ElementAt(0).Value);
 
-                TasksForm confirm = new OneNoteRibbonAddIn.TasksForm(formTitle, allTasks);
+                TasksForm confirm = new TasksForm(formTitle, title, prefix, taskas);
                 confirm.ShowDialog(owner);
 
                 if (confirm.DialogResult == DialogResult.OK)
@@ -444,14 +495,15 @@ namespace OneNoteRibbonAddIn
                         ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
                         try
                         {
+                            if (login.email.Contains("@") == false) login.email += "@ardi.lt";
                             ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
 
                             var transaction = client.CreateTransaction();
-                            var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(title));
+                            var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
 
                             foreach (var task in tasks)
                             {
-                                var content = "[" + title + " - " + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                                var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
                                 var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
                                 //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
                             }
@@ -477,7 +529,6 @@ namespace OneNoteRibbonAddIn
 
         string RemoveHtmlTags(string html)
         {
-            //return Regex.Replace(html, "<.+?>", string.Empty);
             return Regex.Replace(html, @"<(.|\n)*?>", "");
         }
 
