@@ -6,7 +6,7 @@
 
 <img src="https://mariuskaz.github.io/images/simpleGantt.png"/>
 
-2. Push tasks from Onenote page to [Todoist](https://todoist.com):
+2. Push tasks from Onenote to [Todoist](https://todoist.com):
 
 <img src="https://mariuskaz.github.io/images/addTasks.png"/>
 
