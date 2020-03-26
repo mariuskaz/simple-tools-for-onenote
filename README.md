@@ -10,7 +10,6 @@
 
 <img src="https://mariuskaz.github.io/images/addTasks.png"/>
 
-
 References:
 <ul>
 	• https://support.microsoft.com/kb/2555352/en-us?wa=wsignin1.0<br/>
