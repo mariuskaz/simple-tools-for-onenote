@@ -36,8 +36,9 @@
             this.txtTask = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
             this.txtInfo = new System.Windows.Forms.Label();
+            this.todoProjects = new System.Windows.Forms.ComboBox();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +48,7 @@
             this.panel3.Controls.Add(this.btnCancel);
             this.panel3.Controls.Add(this.btnOK);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 196);
+            this.panel3.Location = new System.Drawing.Point(0, 234);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(402, 56);
             this.panel3.TabIndex = 14;
@@ -85,7 +86,7 @@
             this.txtProject.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtProject.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
             this.txtProject.HideSelection = false;
-            this.txtProject.Location = new System.Drawing.Point(27, 20);
+            this.txtProject.Location = new System.Drawing.Point(27, 64);
             this.txtProject.Multiline = true;
             this.txtProject.Name = "txtProject";
             this.txtProject.Size = new System.Drawing.Size(344, 50);
@@ -97,7 +98,7 @@
             // 
             this.txtPrefix.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtPrefix.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtPrefix.Location = new System.Drawing.Point(66, 76);
+            this.txtPrefix.Location = new System.Drawing.Point(66, 120);
             this.txtPrefix.Name = "txtPrefix";
             this.txtPrefix.Size = new System.Drawing.Size(293, 15);
             this.txtPrefix.TabIndex = 3;
@@ -108,7 +109,7 @@
             // 
             this.txtTask.AutoSize = true;
             this.txtTask.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtTask.Location = new System.Drawing.Point(63, 96);
+            this.txtTask.Location = new System.Drawing.Point(63, 140);
             this.txtTask.Name = "txtTask";
             this.txtTask.Size = new System.Drawing.Size(33, 16);
             this.txtTask.TabIndex = 17;
@@ -119,7 +120,7 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
             this.label1.ForeColor = System.Drawing.Color.Gray;
-            this.label1.Location = new System.Drawing.Point(29, 73);
+            this.label1.Location = new System.Drawing.Point(29, 117);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(31, 33);
             this.label1.TabIndex = 18;
@@ -129,28 +130,38 @@
             // 
             this.panel1.Location = new System.Drawing.Point(377, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(25, 186);
+            this.panel1.Size = new System.Drawing.Size(25, 215);
             this.panel1.TabIndex = 19;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.label2.Location = new System.Drawing.Point(24, 160);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(186, 16);
-            this.label2.TabIndex = 20;
-            this.label2.Text = "Adjust project\'s title and tasks.";
             // 
             // txtInfo
             // 
             this.txtInfo.AutoSize = true;
             this.txtInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtInfo.Location = new System.Drawing.Point(24, 142);
+            this.txtInfo.Location = new System.Drawing.Point(24, 186);
             this.txtInfo.Name = "txtInfo";
             this.txtInfo.Size = new System.Drawing.Size(95, 16);
             this.txtInfo.TabIndex = 21;
             this.txtInfo.Text = "Tasks found: 0";
+            // 
+            // todoProjects
+            // 
+            this.todoProjects.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.todoProjects.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.todoProjects.FormattingEnabled = true;
+            this.todoProjects.Location = new System.Drawing.Point(27, 13);
+            this.todoProjects.Name = "todoProjects";
+            this.todoProjects.Size = new System.Drawing.Size(300, 24);
+            this.todoProjects.TabIndex = 22;
+            this.todoProjects.Text = "Create new project";
+            this.todoProjects.SelectedIndexChanged += new System.EventHandler(this.changeTitle);
+            // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.Color.DimGray;
+            this.panel2.Location = new System.Drawing.Point(27, 38);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(300, 1);
+            this.panel2.TabIndex = 23;
             // 
             // TasksForm
             // 
@@ -158,9 +169,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(402, 252);
+            this.ClientSize = new System.Drawing.Size(402, 290);
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.todoProjects);
             this.Controls.Add(this.txtInfo);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtTask);
@@ -190,7 +202,8 @@
         private System.Windows.Forms.Label txtTask;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label txtInfo;
+        private System.Windows.Forms.ComboBox todoProjects;
+        private System.Windows.Forms.Panel panel2;
     }
 }

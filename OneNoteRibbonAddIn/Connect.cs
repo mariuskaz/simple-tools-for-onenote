@@ -86,6 +86,8 @@ namespace OneNoteRibbonAddIn
             ns = doc.Root.Name.Namespace;
             style = "font-family:Calibri;font-size:9.0pt;";
 
+            //doc.Save("D:/one.xml");
+
             var gantts = from oe in doc.Descendants(ns + "OE")
                              from item in oe.Elements(ns + "Meta")
                                 where item.Attribute("name").Value == "SimpleGanttTable"
@@ -273,18 +275,18 @@ namespace OneNoteRibbonAddIn
 
             gantt = gantts.ElementAt(0);
 
-            var dates = from oe in doc.Descendants(ns + "OE")
-                     from item in oe.Elements(ns + "Meta")
-                     where item.Attribute("name").Value == "SimpleGanttStart"
-                     select oe;
+            var dates = from oe in doc.Descendants(ns + "OEChildren")
+                        from item in oe.Descendants(ns + "Meta")
+                        where item.Attribute("name").Value == "SimpleGanttTable"
+                        select oe; //.Descendants(ns + "T");
 
             if (dates.Count() > 0)
             {
-                var startas = RemoveHtmlTags(dates.ElementAt(0).Value).Substring(8).Trim();
+                //var startas = RemoveHtmlTags(dates.ElementAt(0).Value).Substring(8).Trim();
+                var startas = RemoveHtmlTags(dates.Descendants(ns+"T").First().Value).Substring(8).Trim();
                 DateTime.TryParse(startas, out ganttStart);
-                //MessageBox.Show(startas + " Start: " + ganttStart);
+                //MessageBox.Show("Start: " + ganttStart);
             }
-
             
 
             // CALC COLUMNS //
@@ -313,10 +315,30 @@ namespace OneNoteRibbonAddIn
                 if (col == _cols) col = 0;
             }
 
-            // ADD COLUMNS//
+            // ADD COLUMNS //
 
             addGanttColumns(maxPeriod + 4 - cols);
             cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
+
+            // SET HEADER ROW //
+
+            var headers = gantt.Descendants(ns + "Row").First().Descendants(ns + "Cell");
+            foreach (var header in headers)
+            {
+                col++;
+                if (col > 4)
+                {
+                    var index = col - 4;
+                    String txt = index.ToString();
+                    if (ganttStart != new DateTime())
+                    {
+                        var date = ganttStart.AddDays(col - 5);
+                        txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
+                    }
+                    header.Descendants(ns + "T").First().Value = txt;
+                }
+            }
+            col = 0;
 
             // ADD COLORS //
 
@@ -363,20 +385,12 @@ namespace OneNoteRibbonAddIn
                 var columns = gantt.Elements(ns + "Table").First().Descendants(ns + "Columns").First();
                 var column = new XElement(ns + "Column",
                     new XAttribute("index", index.ToString()),
-                    new XAttribute("width", "20.0"),
-                    new XAttribute("isLocked", "true")
+                    new XAttribute("width", "10.0"),
+                    new XAttribute("isLocked", "false")
                 );
                 columns.Add(column);
 
                 var rows = gantt.Elements(ns + "Table").First().Descendants(ns + "Row");
-
-                String txt = col.ToString();
-                if (ganttStart != new DateTime())
-                {
-                    var date = ganttStart.AddDays(col - 1);
-                    txt = Right("0"+date.Month.ToString(),2) + "." + Right("0"+date.Day.ToString(),2);
-                }
-
                 foreach (var row in rows)
                 {
                     var cell = new XElement(ns + "Cell",
@@ -384,12 +398,11 @@ namespace OneNoteRibbonAddIn
                             new XElement(ns + "OE",
                                 new XAttribute("style", style),
                                 new XAttribute("alignment", "center"),
-                                new XElement(ns + "T", new XCData(txt))
+                                new XElement(ns + "T", new XCData(""))
                             )
                         )
                     );
                     row.Add(cell);
-                    txt = " ";
                 }
 
             }
@@ -456,17 +469,18 @@ namespace OneNoteRibbonAddIn
                     i++;
                 }
                 var tasks = from oe in doc.Descendants(ns + "OE")
-                                from item in oe.Elements(ns + "Tag")
-                                    //where item.Attribute("index").Value == index
-                                    where allTags.Contains(item.Attribute("index").Value)
-                                        where item.Attribute("completed").Value == "false"
-                                            select oe;
+                            from item in oe.Elements(ns + "Tag")
+                                //where item.Attribute("index").Value == index
+                            where allTags.Contains(item.Attribute("index").Value)
+                            where item.Attribute("completed").Value == "false"
+                            select oe;
                 if (tasks.Count() == 0)
                 {
                     MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
 
+                
                 string allTasks = "";
                 string prefix = title;
                 string formTitle = "Tasks found: " + tasks.Count().ToString();
@@ -480,49 +494,74 @@ namespace OneNoteRibbonAddIn
                 }
                 string taskas = RemoveHtmlTags(tasks.ElementAt(0).Value);
 
-                TasksForm confirm = new TasksForm(formTitle, title, prefix, taskas);
-                confirm.ShowDialog(owner);
+                LoginForm login = new LoginForm();
+                login.ShowDialog(owner);
 
-                if (confirm.DialogResult == DialogResult.OK)
+                if (login.DialogResult == DialogResult.OK)
                 {
 
-                    LoginForm login = new LoginForm();
-                    login.ShowDialog(owner);
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
 
-                    if (login.DialogResult == DialogResult.OK)
+                    try
                     {
-                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                        ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
-                        try
+
+                        if (login.email.Contains("@") == false) login.email += "@ardi.lt";
+                        ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
+                        var projects = await client.Projects.GetAsync();
+
+                        TasksForm confirm = new TasksForm(formTitle, title, prefix, taskas, projects);
+                        confirm.ShowDialog(owner);
+
+                        if (confirm.DialogResult == DialogResult.OK)
                         {
-                            if (login.email.Contains("@") == false) login.email += "@ardi.lt";
-                            ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
-
                             var transaction = client.CreateTransaction();
-                            var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
 
-                            foreach (var task in tasks)
+                            if (confirm.id > 0)
                             {
-                                var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
-                                var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
-                                //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                                foreach (var item in projects)
+                                {
+                                    if (item.Name == confirm.project)
+                                    {
+                                        foreach (var task in tasks)
+                                        {
+                                            var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                                            var todo = new Todoist.Net.Models.Item(content);
+                                            todo.ProjectId = item.Id;
+                                            var taskId = await transaction.Items.AddAsync(todo);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
+                                foreach (var task in tasks)
+                                {
+                                    var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                                    var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
+                                    //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                                }
                             }
 
                             await transaction.CommitAsync();
                             System.Diagnostics.Process.Start("https://todoist.com");
                         }
-                        catch {
-                            MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK,MessageBoxIcon.Error);
-                        }
-                    }
 
-                    login.Dispose();
-                    login = null;
+                        confirm.Dispose();
+                        confirm = null;
+
+                    }
+                    catch
+                    {
+                        MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
 
                 }
 
-                confirm.Dispose();
-                confirm = null;
+                login.Dispose();
+                login = null;
+
             }
 
         }
