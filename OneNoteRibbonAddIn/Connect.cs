@@ -71,6 +71,8 @@ namespace OneNoteRibbonAddIn
         XElement gantt;
         DateTime ganttStart;
         String style;
+        String todoistUser;
+        string todoistPsw;
         
         public void SimpleGantt(IRibbonControl control)
         {
@@ -85,8 +87,6 @@ namespace OneNoteRibbonAddIn
             doc = XDocument.Parse(xml);
             ns = doc.Root.Name.Namespace;
             style = "font-family:Calibri;font-size:9.0pt;";
-
-            //doc.Save("D:/one.xml");
 
             var gantts = from oe in doc.Descendants(ns + "OE")
                              from item in oe.Elements(ns + "Meta")
@@ -285,7 +285,6 @@ namespace OneNoteRibbonAddIn
                 //var startas = RemoveHtmlTags(dates.ElementAt(0).Value).Substring(8).Trim();
                 var startas = RemoveHtmlTags(dates.Descendants(ns+"T").First().Value).Substring(8).Trim();
                 DateTime.TryParse(startas, out ganttStart);
-                //MessageBox.Show("Start: " + ganttStart);
             }
             
 
@@ -298,6 +297,7 @@ namespace OneNoteRibbonAddIn
             int start = 0;
             int duration = 0;
             int maxPeriod = 0;
+            string[] weekdays = { "VII", "I", "II", "III", "IV", "V", "VI"};
 
             var items = gantt.Elements(ns + "Table").First().Descendants(ns + "Cell");
             int cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
@@ -333,7 +333,9 @@ namespace OneNoteRibbonAddIn
                     if (ganttStart != new DateTime())
                     {
                         var date = ganttStart.AddDays(col - 5);
+                        var weekday = (int)date.DayOfWeek;
                         txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
+                        txt = txt + System.Environment.NewLine + weekdays[weekday];
                     }
                     header.Descendants(ns + "T").First().Value = txt;
                 }
@@ -474,6 +476,7 @@ namespace OneNoteRibbonAddIn
                             where allTags.Contains(item.Attribute("index").Value)
                             where item.Attribute("completed").Value == "false"
                             select oe;
+
                 if (tasks.Count() == 0)
                 {
                     MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -525,22 +528,40 @@ namespace OneNoteRibbonAddIn
                                     {
                                         foreach (var task in tasks)
                                         {
-                                            var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
+                                           
+                                            string[] text = task.Value.ToString().Split('@');
+                                            var content = "[" + confirm.prefix + RemoveHtmlTags(text[0]) + "](" + link + ")";
+
                                             var todo = new Todoist.Net.Models.Item(content);
                                             todo.ProjectId = item.Id;
+
                                             var taskId = await transaction.Items.AddAsync(todo);
+                                            if (text.Length > 1)
+                                            {
+                                                var note = await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);
+                                            }
+
                                         }
                                     }
                                 }
                             }
+
                             else
+
                             {
                                 var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
                                 foreach (var task in tasks)
                                 {
-                                    var content = "[" + confirm.prefix + RemoveHtmlTags(task.Value) + "](" + link + ")";
-                                    var taskId = await transaction.Items.AddAsync(new Todoist.Net.Models.Item(content, projectId));
-                                    //await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note("Task description"), taskId);
+                                    string[] text = task.Value.ToString().Split('@');
+                                    var content = "[" + confirm.prefix + RemoveHtmlTags(text[0]) + "](" + link + ")";
+
+                                    var todo = new Todoist.Net.Models.Item(content, projectId);
+                                    var taskId = await transaction.Items.AddAsync(todo);
+
+                                    if (text.Length > 1)
+                                    {
+                                        var note = await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);
+                                    }
                                 }
                             }
 
