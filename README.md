@@ -6,10 +6,9 @@
 
 <img src="https://mariuskaz.github.io/images/simpleGantt.png"/>
 
-2. Push tasks from Onenote page to [Todoist](https://todoist.com):
+2. Push tasks from Onenote to [Todoist](https://todoist.com):
 
 <img src="https://mariuskaz.github.io/images/addTasks.png"/>
-
 
 References:
 <ul>
@@ -19,6 +18,7 @@ References:
 	• http://msdn.microsoft.com/en-us/magazine/ff796230.aspx<br/>
 	• https://github.com/Fixxzer/OneNoteRibbonAddIn<br/>
 </ul>
+
 This will demonstrate how to create a OneNote 2013 COM add-in, that implements the IRibbonExtensibility and IDTExtensibility2 interfaces, which will allow you to customize the ribbon of Microsoft OneNote 2013.
 
 Tools required:
