@@ -433,11 +433,6 @@ namespace OneNoteRibbonAddIn
             }
         }
 
-        private string Right(string str, int x)
-        {
-            return str.Substring(str.Length - x);
-        }
-
         String todoist_user = "";
         String todoist_psw = "";
 
@@ -590,14 +585,17 @@ namespace OneNoteRibbonAddIn
                             string[] text = task.content.ToString().Split('#');
                             var content = RemoveHtmlTags(text[0]);
                             if (confirm.links) content = "[" + content + "](" + link + ")";
-                            content = content + " /" + task.assignedTo;
 
-                            var todo = new Todoist.Net.Models.Item(content, projectId);
+                            Todoist.Net.Models.Item todo = 
+                                new Todoist.Net.Models.Item(content, projectId);
+
+                            if (validDate(task.due))
+                                todo.DueDate = new Todoist.Net.Models.DueDate(task.due);
+
                             if (task.assignedTo.Length > 0)
                             {
                                 string mail = task.assignedTo.IndexOf("@") > 0 ? task.assignedTo : task.assignedTo + "@ardi.lt";
                                 string key = mail.ToLower();
-                                
                                 if (userDetails.ContainsKey(key))
                                 {
                                     long userId= (long)userDetails[key];
@@ -605,7 +603,6 @@ namespace OneNoteRibbonAddIn
                                     await transaction.Sharing.ShareProjectAsync(projectId, mail);
                                 }
                             }
-                            //if (task.start.Length == 10) // 2021-09-30 arba 1
 
                             var taskId = await transaction.Items.AddAsync(todo);
                             if (text.Length > 1) await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);     
@@ -649,12 +646,17 @@ namespace OneNoteRibbonAddIn
             public string email { get; set; }
         }
 
-        string RemoveHtmlTags(string html)
+        private string Right(string str, int x)
+        {
+            return str.Substring(str.Length - x);
+        }
+
+        private string RemoveHtmlTags(string html)
         {
             return Regex.Replace(html, @"<(.|\n)*?>", "");
         }
 
-        Boolean validDate(string date)
+        private Boolean validDate(string date)
         {
             Regex regex = new Regex(@"\d\d\d\d-\d\d-\d\d");
             return regex.IsMatch(date);
