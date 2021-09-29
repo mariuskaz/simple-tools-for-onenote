@@ -283,12 +283,10 @@ namespace OneNoteRibbonAddIn
 
             if (dates.Count() > 0)
             {
-                //var startas = RemoveHtmlTags(dates.ElementAt(0).Value).Substring(8).Trim();
-                var startas = RemoveHtmlTags(dates.Descendants(ns+"T").First().Value).Substring(8).Trim();
-                DateTime.TryParse(startas, out ganttStart);
+                var startTag = RemoveHtmlTags(dates.Descendants(ns+"T").First().Value).Substring(8).Trim();
+                DateTime.TryParse(startTag, out ganttStart);
             }
             
-
             // CALC COLUMNS //
 
             int taskColumn = 1;
@@ -321,28 +319,6 @@ namespace OneNoteRibbonAddIn
             addGanttColumns(maxPeriod + 4 - cols);
             cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
 
-            // SET HEADER ROW //
-
-            var headers = gantt.Descendants(ns + "Row").First().Descendants(ns + "Cell");
-            foreach (var header in headers)
-            {
-                col++;
-                if (col > 4)
-                {
-                    var index = col - 4;
-                    String txt = index.ToString();
-                    if (ganttStart != new DateTime())
-                    {
-                        var date = ganttStart.AddDays(col - 5);
-                        var weekday = (int)date.DayOfWeek;
-                        txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
-                        txt = txt + System.Environment.NewLine + weekdays[weekday];
-                    }
-                    header.Descendants(ns + "T").First().Value = txt;
-                }
-            }
-            col = 0;
-
             // ADD COLORS //
 
             var cells = gantt.Elements(ns + "Table").First().Descendants(ns + "Cell");
@@ -350,7 +326,20 @@ namespace OneNoteRibbonAddIn
             {
                 col++;
                 if (col == taskColumn) taskName = cell.Value;
-                if (col == startColumn) Int32.TryParse(cell.Value, out start);
+                if (col == startColumn)
+                {
+                    if (validDate(cell.Value))
+                    {
+                        var startDate = DateTime.Parse(cell.Value);
+                        if (ganttStart == new DateTime()) ganttStart = startDate;
+                        var timespan = startDate - ganttStart;
+                        start = Convert.ToInt32(timespan.TotalDays) + 1;
+                    }
+                    else
+                    {
+                        Int32.TryParse(cell.Value, out start);
+                    }
+                }
                 if (col == durationColumn) Int32.TryParse(cell.Value, out duration);
                 var color = cell.Attribute("shadingColor");
                 if (color != null) cell.Attribute("shadingColor").Remove();
@@ -384,6 +373,28 @@ namespace OneNoteRibbonAddIn
                 }
                 if (col == cols) col = 0;
             }
+
+            // SET HEADER ROW //
+
+            var headers = gantt.Descendants(ns + "Row").First().Descendants(ns + "Cell");
+            foreach (var header in headers)
+            {
+                col++;
+                if (col > 4)
+                {
+                    var index = col - 4;
+                    String txt = index.ToString();
+                    if (ganttStart != new DateTime())
+                    {
+                        var date = ganttStart.AddDays(col - 5);
+                        var weekday = (int)date.DayOfWeek;
+                        txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
+                        txt = txt + System.Environment.NewLine + weekdays[weekday];
+                    }
+                    header.Descendants(ns + "T").First().Value = txt;
+                }
+            }
+            col = 0;
 
             //doc.Save("D:/doc.xml");
             onenote.UpdatePageContent(doc.ToString());
@@ -483,7 +494,7 @@ namespace OneNoteRibbonAddIn
                            where item.Attribute("completed").Value == "false"
                            select cc;
                 if (tags.Count() > 0)
-                    todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value });
+                    todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value, due = cells.ElementAt(1).Value });
             }
 
             if (todolist.Count() == 0)
@@ -594,6 +605,7 @@ namespace OneNoteRibbonAddIn
                                     await transaction.Sharing.ShareProjectAsync(projectId, mail);
                                 }
                             }
+                            //if (task.start.Length == 10) // 2021-09-30 arba 1
 
                             var taskId = await transaction.Items.AddAsync(todo);
                             if (text.Length > 1) await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);     
@@ -640,6 +652,12 @@ namespace OneNoteRibbonAddIn
         string RemoveHtmlTags(string html)
         {
             return Regex.Replace(html, @"<(.|\n)*?>", "");
+        }
+
+        Boolean validDate(string date)
+        {
+            Regex regex = new Regex(@"\d\d\d\d-\d\d-\d\d");
+            return regex.IsMatch(date);
         }
 
     }
