@@ -16,17 +16,14 @@ namespace OneNoteRibbonAddIn
     public partial class TasksForm : Form
     {
         public string project;
-        public string prefix;
         public long id;
+        public bool links;
 
-        public TasksForm(string title, string project, string prefix, string task, IEnumerable<Todoist.Net.Models.Project> projects)
+        public TasksForm(string project, string info, IEnumerable<Todoist.Net.Models.Project> projects)
         {
             InitializeComponent();
-            this.Text = title;
-            this.txtInfo.Text = title;
+            this.txtInfo.Text = info;
             this.txtProject.Text = project;
-            this.txtPrefix.Text = prefix +" - ";
-            this.txtTask.Text = task;
             this.todoProjects.Items.Add("Create new project");
             foreach (var item in projects)
             {
@@ -38,7 +35,7 @@ namespace OneNoteRibbonAddIn
         private void btnOK_Click(object sender, EventArgs e)
         {
             project = txtProject.Text;
-            prefix = txtPrefix.Text;
+            links = addLinks.Checked;
         }
 
         private void changeTitle(object sender, EventArgs e)

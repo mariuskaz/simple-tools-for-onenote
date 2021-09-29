@@ -14,7 +14,10 @@ using System.Globalization;
 using System.Net;
 using Todoist.Net;
 using System.Text.RegularExpressions;
-
+using System.Net.Http;
+using System.Collections.Generic;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace OneNoteRibbonAddIn
 {
@@ -66,13 +69,11 @@ namespace OneNoteRibbonAddIn
             MessageBox.Show(DateTime.Now.ToString("MM"));
         }
 
+        DateTime ganttStart;
+        XElement gantt;
         XDocument doc;
         XNamespace ns;
-        XElement gantt;
-        DateTime ganttStart;
         String style;
-        String todoistUser;
-        string todoistPsw;
         
         public void SimpleGantt(IRibbonControl control)
         {
@@ -297,7 +298,7 @@ namespace OneNoteRibbonAddIn
             int start = 0;
             int duration = 0;
             int maxPeriod = 0;
-            string[] weekdays = { "VII", "I", "II", "III", "IV", "V", "VI"};
+            string[] weekdays = { "VII", "I", "II", "III", "IV", "V", "VI" };
 
             var items = gantt.Elements(ns + "Table").First().Descendants(ns + "Cell");
             int cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
@@ -355,6 +356,10 @@ namespace OneNoteRibbonAddIn
                 if (color != null) cell.Attribute("shadingColor").Remove();
                 var finish = start + duration - 1;
                 var current = col - 4;
+
+                var weekend = false;
+                if (cell.Value.IndexOf("VI") > 0) weekend = true;
+
                 if (col > 4 & current >= start & current <= finish)
                 {
                     if (taskName == taskName.ToUpper())
@@ -368,7 +373,14 @@ namespace OneNoteRibbonAddIn
                 }
                 else if (col > 4)
                 {
-                    if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
+                    if (weekend == true)
+                    {
+                        cell.Add(new XAttribute("shadingColor", "#D6DCE4"));
+                    }
+                    else
+                    {
+                        if (col % 2 > 0) cell.Add(new XAttribute("shadingColor", "#FAFAFA"));
+                    }
                 }
                 if (col == cols) col = 0;
             }
@@ -415,32 +427,35 @@ namespace OneNoteRibbonAddIn
             return str.Substring(str.Length - x);
         }
 
+        String todoist_user = "";
+        String todoist_psw = "";
+
         public async void ExportTasks(IRibbonControl control)
         {
+
             Window context = control.Context as Window;
             CWin32WindowWrapper owner = new CWin32WindowWrapper((IntPtr)context.WindowHandle);
 
             Microsoft.Office.Interop.OneNote.Application onenote = new Microsoft.Office.Interop.OneNote.Application();
             string thisNoteBook = onenote.Windows.CurrentWindow.CurrentNotebookId;
             string thisSection = onenote.Windows.CurrentWindow.CurrentSectionId;
-            string thisPage = onenote.Windows.CurrentWindow.CurrentPageId;            
+            string thisPage = onenote.Windows.CurrentWindow.CurrentPageId;
 
             String link;
             onenote.GetHyperlinkToObject(thisPage, System.String.Empty, out link);
 
             String xmlNotebooks;
+            String xmlPage;
+
             onenote.GetHierarchy(null,
                Microsoft.Office.Interop.OneNote.HierarchyScope.hsPages, out xmlNotebooks);
 
             var notebooks = XDocument.Parse(xmlNotebooks);
-
             var currentbook = from item in notebooks.Descendants(notebooks.Root.Name.Namespace + "Notebook")
-                                where item.Attribute("ID").Value == thisNoteBook
-                                    select item;
+                              where item.Attribute("ID").Value == thisNoteBook
+                              select item;
 
             var notebook = currentbook.First().Attribute("name").Value;
-
-            String xmlPage;
             onenote.GetPageContent(thisPage, out xmlPage);
             doc = XDocument.Parse(xmlPage);
             ns = doc.Root.Name.Namespace;
@@ -448,150 +463,184 @@ namespace OneNoteRibbonAddIn
             var pageTitle = RemoveHtmlTags(doc.Descendants(ns + "Title").First().Value);
             var title = notebook + ": " + pageTitle;
 
-            var tags = from tagDef in doc.Descendants(ns + "TagDef")
-                            where tagDef.Attribute("symbol").Value == "3"
-                                    select tagDef;
+            /* var tasks = from oe in doc.Descendants(ns + "OE")
+                        from item in oe.Elements(ns + "Tag")
+                        where item.Attribute("completed").Value == "false"
+                        select oe; */
 
-            if (tags.Count() == 0)
+            var todolist = new List<Todo>();
+            var gantt = (from oe in doc.Descendants(ns + "OE")
+                     from item in oe.Elements(ns + "Meta")
+                     where item.Attribute("name").Value == "SimpleGanttTable"
+                     select oe).FirstOrDefault();
 
+            var rows = gantt.Elements(ns + "Table").First().Descendants(ns + "Row");
+            foreach (var row in rows)
+            {
+                var cells = row.Descendants(ns + "Cell");
+                var tags = from cc in cells
+                           from item in cc.Descendants(ns + "Tag")
+                           where item.Attribute("completed").Value == "false"
+                           select cc;
+                if (tags.Count() > 0)
+                    todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value });
+            }
+
+            if (todolist.Count() == 0)
             {
                 MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
             }
 
-            else
 
+            // LOGIN IF NOT //
+            if (todoist_user.Length == 0)
             {
-
-                var index = tags.First().Attribute("index").Value;
-                string[] allTags = new string[2];
-                int i = 0;
-                foreach (var tag in tags)
-                {
-                    allTags[i] = tag.Attribute("index").Value;
-                    i++;
-                }
-                var tasks = from oe in doc.Descendants(ns + "OE")
-                            from item in oe.Elements(ns + "Tag")
-                                //where item.Attribute("index").Value == index
-                            where allTags.Contains(item.Attribute("index").Value)
-                            where item.Attribute("completed").Value == "false"
-                            select oe;
-
-                if (tasks.Count() == 0)
-                {
-                    MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-
-                
-                string allTasks = "";
-                string prefix = title;
-                string formTitle = "Tasks found: " + tasks.Count().ToString();
-                if (prefix.Length > 60) prefix = prefix.Substring(0, 60);
-                int counter = 0;
-                foreach (var task in tasks)
-                {
-                    counter++;
-                    allTasks += "o    " + prefix + "\n       " + RemoveHtmlTags(task.Element(ns + "T").Value) + "\n\n";
-                    if (counter > 4) break;
-                }
-                string taskas = RemoveHtmlTags(tasks.ElementAt(0).Value);
-
                 LoginForm login = new LoginForm();
                 login.ShowDialog(owner);
-
                 if (login.DialogResult == DialogResult.OK)
                 {
+                    if (login.email.Contains("@") == false) login.email += "@ardi.lt";
+                    todoist_user = login.email;
+                    todoist_psw = login.password;
+                    login.Dispose();
+                    login = null;
+                }
+            }
 
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                    ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
 
-                    try
+            if (todoist_user.Length > 0)
+            {
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
+
+                try
+                {
+
+                    ITodoistClient client = await tokenlessClient.LoginAsync(todoist_user, todoist_psw);
+                    var projects = await client.Projects.GetAsync();
+                    var status = "Tasks found: " + todolist.Count().ToString();
+
+                    TasksForm confirm = new TasksForm(pageTitle, status, projects);
+                    confirm.ShowDialog(owner);
+
+                    if (confirm.DialogResult == DialogResult.OK)
                     {
 
-                        if (login.email.Contains("@") == false) login.email += "@ardi.lt";
-                        ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
-                        var projects = await client.Projects.GetAsync();
+                        var transaction = client.CreateTransaction();
+                        var user = await client.Users.GetCurrentAsync();
+                        var token = user.Token.ToString();
 
-                        TasksForm confirm = new TasksForm(formTitle, title, prefix, taskas, projects);
-                        confirm.ShowDialog(owner);
-
-                        if (confirm.DialogResult == DialogResult.OK)
+                        // Get all collaborators //
+                        var userDetails = new System.Collections.Hashtable();
+                        using (var httpClient = new HttpClient())
                         {
-                            var transaction = client.CreateTransaction();
-
-                            if (confirm.id > 0)
+                            using (var request = new HttpRequestMessage(new HttpMethod("POST"), "https://api.todoist.com/sync/v8/sync"))
                             {
-                                foreach (var item in projects)
+                                request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                                var contentList = new List<string>();
+                                contentList.Add("sync_token=*");
+                                contentList.Add("resource_types=[\"collaborators\"]");
+                                request.Content = new StringContent(string.Join("&", contentList));
+                                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+                                var response = await httpClient.SendAsync(request);
+                                var json = response.Content.ReadAsStringAsync();
+                                var result = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json.Result);
+                                var persons = result.collaborators;
+                                foreach (var person in persons)
                                 {
-                                    if (item.Name == confirm.project)
-                                    {
-                                        foreach (var task in tasks)
-                                        {
-                                           
-                                            string[] text = task.Value.ToString().Split('@');
-                                            var content = "[" + confirm.prefix + RemoveHtmlTags(text[0]) + "](" + link + ")";
-
-                                            var todo = new Todoist.Net.Models.Item(content);
-                                            todo.ProjectId = item.Id;
-
-                                            var taskId = await transaction.Items.AddAsync(todo);
-                                            if (text.Length > 1)
-                                            {
-                                                var note = await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);
-                                            }
-
-                                        }
-                                    }
+                                    string email = person.email;
+                                    string mail = email.ToLower();
+                                    long userId = person.id;
+                                    userDetails.Add(mail, userId);
                                 }
                             }
-
-                            else
-
-                            {
-                                var projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
-                                foreach (var task in tasks)
-                                {
-                                    string[] text = task.Value.ToString().Split('@');
-                                    var content = "[" + confirm.prefix + RemoveHtmlTags(text[0]) + "](" + link + ")";
-
-                                    var todo = new Todoist.Net.Models.Item(content, projectId);
-                                    var taskId = await transaction.Items.AddAsync(todo);
-
-                                    if (text.Length > 1)
-                                    {
-                                        var note = await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);
-                                    }
-                                }
-                            }
-
-                            await transaction.CommitAsync();
-                            System.Diagnostics.Process.Start("https://todoist.com");
                         }
 
-                        confirm.Dispose();
-                        confirm = null;
+                        var projectId = new Todoist.Net.Models.ComplexId();
+                        if (confirm.id > 0)
+                        {
+                            foreach (var item in projects)
+                            {
+                                if (item.Name == confirm.project) projectId = item.Id;
+                            }
+                        }
 
+                        else
+                        {
+                            projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
+                            //await transaction.Sharing.ShareProjectAsync(projectId, "pasitarimai@ardi.lt");
+                        }
+               
+
+                        foreach (var task in todolist)
+                        {
+                            string[] text = task.content.ToString().Split('#');
+                            var content = RemoveHtmlTags(text[0]);
+                            if (confirm.links) content = "[" + content + "](" + link + ")";
+                            content = content + " /" + task.assignedTo;
+
+                            var todo = new Todoist.Net.Models.Item(content, projectId);
+                            if (task.assignedTo.Length > 0)
+                            {
+                                string mail = task.assignedTo.IndexOf("@") > 0 ? task.assignedTo : task.assignedTo + "@ardi.lt";
+                                string key = mail.ToLower();
+                                
+                                if (userDetails.ContainsKey(key))
+                                {
+                                    long userId= (long)userDetails[key];
+                                    todo.ResponsibleUid = userId;
+                                    await transaction.Sharing.ShareProjectAsync(projectId, mail);
+                                }
+                            }
+
+                            var taskId = await transaction.Items.AddAsync(todo);
+                            if (text.Length > 1) await transaction.Notes.AddToItemAsync(new Todoist.Net.Models.Note(text[1]), taskId);     
+                        }
+
+                        await transaction.CommitAsync();
+                        string url = "https://todoist.com";
+                        projects = await client.Projects.GetAsync();
+                        foreach (var project in projects)
+                        {
+                            if (project.Name == confirm.project 
+                                && !project.IsArchived ) url = url + "/app/project/" + project.Id.ToString();
+                        }
+                        System.Diagnostics.Process.Start(url);
                     }
-                    catch
-                    {
-                        MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+
+                    confirm.Dispose();
+                    confirm = null;
 
                 }
-
-                login.Dispose();
-                login = null;
+                catch
+                {
+                    MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
 
             }
 
+            
+        }
+
+        public class Todo {
+            public string content { get; set; }
+            public string assignedTo { get; set; }
+            public string due { get; set; }
+        }
+
+        public class User
+        {
+            public long id { get; set; }
+            public string full_name { get; set; }
+            public string email { get; set; }
         }
 
         string RemoveHtmlTags(string html)
         {
             return Regex.Replace(html, @"<(.|\n)*?>", "");
         }
-
 
     }
 }

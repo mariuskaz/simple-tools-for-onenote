@@ -32,13 +32,10 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.txtProject = new System.Windows.Forms.TextBox();
-            this.txtPrefix = new System.Windows.Forms.TextBox();
-            this.txtTask = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.txtInfo = new System.Windows.Forms.Label();
             this.todoProjects = new System.Windows.Forms.ComboBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.addLinks = new System.Windows.Forms.CheckBox();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,7 +45,7 @@
             this.panel3.Controls.Add(this.btnCancel);
             this.panel3.Controls.Add(this.btnOK);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 234);
+            this.panel3.Location = new System.Drawing.Point(0, 192);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(402, 56);
             this.panel3.TabIndex = 14;
@@ -83,6 +80,7 @@
             // txtProject
             // 
             this.txtProject.AcceptsReturn = true;
+            this.txtProject.BackColor = System.Drawing.SystemColors.InactiveBorder;
             this.txtProject.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtProject.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
             this.txtProject.HideSelection = false;
@@ -94,50 +92,11 @@
             this.txtProject.TabStop = false;
             this.txtProject.Text = "Project";
             // 
-            // txtPrefix
-            // 
-            this.txtPrefix.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtPrefix.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtPrefix.Location = new System.Drawing.Point(66, 120);
-            this.txtPrefix.Name = "txtPrefix";
-            this.txtPrefix.Size = new System.Drawing.Size(293, 15);
-            this.txtPrefix.TabIndex = 3;
-            this.txtPrefix.TabStop = false;
-            this.txtPrefix.Text = "Prefix";
-            // 
-            // txtTask
-            // 
-            this.txtTask.AutoSize = true;
-            this.txtTask.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtTask.Location = new System.Drawing.Point(63, 140);
-            this.txtTask.Name = "txtTask";
-            this.txtTask.Size = new System.Drawing.Size(33, 16);
-            this.txtTask.TabIndex = 17;
-            this.txtTask.Text = "task";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.label1.ForeColor = System.Drawing.Color.Gray;
-            this.label1.Location = new System.Drawing.Point(29, 117);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(31, 33);
-            this.label1.TabIndex = 18;
-            this.label1.Text = "o";
-            // 
-            // panel1
-            // 
-            this.panel1.Location = new System.Drawing.Point(377, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(25, 215);
-            this.panel1.TabIndex = 19;
-            // 
             // txtInfo
             // 
             this.txtInfo.AutoSize = true;
             this.txtInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtInfo.Location = new System.Drawing.Point(24, 186);
+            this.txtInfo.Location = new System.Drawing.Point(24, 136);
             this.txtInfo.Name = "txtInfo";
             this.txtInfo.Size = new System.Drawing.Size(95, 16);
             this.txtInfo.TabIndex = 21;
@@ -163,20 +122,29 @@
             this.panel2.Size = new System.Drawing.Size(300, 1);
             this.panel2.TabIndex = 23;
             // 
+            // addLinks
+            // 
+            this.addLinks.AutoSize = true;
+            this.addLinks.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.addLinks.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.addLinks.Location = new System.Drawing.Point(27, 160);
+            this.addLinks.Name = "addLinks";
+            this.addLinks.Size = new System.Drawing.Size(158, 22);
+            this.addLinks.TabIndex = 2;
+            this.addLinks.Text = "Add links to onenote";
+            this.addLinks.UseVisualStyleBackColor = true;
+            // 
             // TasksForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(402, 290);
+            this.ClientSize = new System.Drawing.Size(402, 248);
+            this.Controls.Add(this.addLinks);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.todoProjects);
             this.Controls.Add(this.txtInfo);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.txtTask);
-            this.Controls.Add(this.txtPrefix);
             this.Controls.Add(this.txtProject);
             this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -186,7 +154,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Template";
+            this.Text = "Todoist";
             this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -198,12 +166,9 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.TextBox txtProject;
-        private System.Windows.Forms.TextBox txtPrefix;
-        private System.Windows.Forms.Label txtTask;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label txtInfo;
         private System.Windows.Forms.ComboBox todoProjects;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.CheckBox addLinks;
     }
 }
