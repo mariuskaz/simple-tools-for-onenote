@@ -306,7 +306,20 @@ namespace OneNoteRibbonAddIn
             foreach (var item in items)
             {
                 col++;
-                if (col == startColumn) Int32.TryParse(item.Value, out start);
+                if (col == startColumn)
+                {
+                    if (validDate(item.Value))
+                    {
+                        var startDate = DateTime.Parse(item.Value);
+                        if (ganttStart == new DateTime()) ganttStart = startDate;
+                        var timespan = startDate - ganttStart;
+                        start = Convert.ToInt32(timespan.TotalDays) + 1;
+                    }
+                    else
+                    {
+                        Int32.TryParse(item.Value, out start);
+                    }
+                }
                 if (col == durationColumn & start > 0 & Int32.TryParse(item.Value, out duration))
                 {
                     if (start + duration - 1 > maxPeriod) maxPeriod = start + duration - 1;
@@ -318,6 +331,30 @@ namespace OneNoteRibbonAddIn
 
             addGanttColumns(maxPeriod + 4 - cols);
             cols = gantt.Elements(ns + "Table").First().Descendants(ns + "Column").Count();
+
+
+            // SET HEADER ROW //
+
+            var headers = gantt.Descendants(ns + "Row").First().Descendants(ns + "Cell");
+            foreach (var header in headers)
+            {
+                col++;
+                if (col > 4)
+                {
+                    var index = col - 4;
+                    String txt = index.ToString();
+                    if (ganttStart != new DateTime())
+                    {
+                        var date = ganttStart.AddDays(col - 5);
+                        var weekday = (int)date.DayOfWeek;
+                        txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
+                        txt = txt + System.Environment.NewLine + weekdays[weekday];
+                    }
+                    header.Descendants(ns + "T").First().Value = txt;
+                }
+            }
+            col = 0;
+
 
             // ADD COLORS //
 
@@ -373,28 +410,6 @@ namespace OneNoteRibbonAddIn
                 }
                 if (col == cols) col = 0;
             }
-
-            // SET HEADER ROW //
-
-            var headers = gantt.Descendants(ns + "Row").First().Descendants(ns + "Cell");
-            foreach (var header in headers)
-            {
-                col++;
-                if (col > 4)
-                {
-                    var index = col - 4;
-                    String txt = index.ToString();
-                    if (ganttStart != new DateTime())
-                    {
-                        var date = ganttStart.AddDays(col - 5);
-                        var weekday = (int)date.DayOfWeek;
-                        txt = Right("0" + date.Month.ToString(), 2) + "." + Right("0" + date.Day.ToString(), 2);
-                        txt = txt + System.Environment.NewLine + weekdays[weekday];
-                    }
-                    header.Descendants(ns + "T").First().Value = txt;
-                }
-            }
-            col = 0;
 
             //doc.Save("D:/doc.xml");
             onenote.UpdatePageContent(doc.ToString());
