@@ -450,7 +450,7 @@ namespace OneNoteRibbonAddIn
 
         String todoist_user = "";
         String todoist_psw = "";
-
+        
         public async void ExportTasks(IRibbonControl control)
         {
 
@@ -481,36 +481,45 @@ namespace OneNoteRibbonAddIn
             doc = XDocument.Parse(xmlPage);
             ns = doc.Root.Name.Namespace;
 
-            var pageTitle = RemoveHtmlTags(doc.Descendants(ns + "Title").First().Value);
-            var title = notebook + ": " + pageTitle;
-
-            /* var tasks = from oe in doc.Descendants(ns + "OE")
-                        from item in oe.Elements(ns + "Tag")
-                        where item.Attribute("completed").Value == "false"
-                        select oe; */
-
+            var title = RemoveHtmlTags(doc.Descendants(ns + "Title").First().Value);
             var todolist = new List<Todo>();
+
             var gantt = (from oe in doc.Descendants(ns + "OE")
                      from item in oe.Elements(ns + "Meta")
                      where item.Attribute("name").Value == "SimpleGanttTable"
                      select oe).FirstOrDefault();
 
-            var rows = gantt.Elements(ns + "Table").First().Descendants(ns + "Row");
-            foreach (var row in rows)
+            if (gantt != null)
             {
-                var cells = row.Descendants(ns + "Cell");
-                var tags = from cc in cells
-                           from item in cc.Descendants(ns + "Tag")
-                           where item.Attribute("completed").Value == "false"
-                           select cc;
-                if (tags.Count() > 0)
-                    todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value, due = cells.ElementAt(1).Value });
+                var rows = gantt.Elements(ns + "Table").Descendants(ns + "Row");
+                foreach (var row in rows)
+                {
+                    var cells = row.Descendants(ns + "Cell");
+                    var tags = from cell in cells
+                               from tag in cell.Descendants(ns + "Tag")
+                               where tag.Attribute("completed").Value == "false"
+                               select cell;
+                    if (tags.Count() > 0)
+                        todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value, due = cells.ElementAt(1).Value });
+                }
             }
 
             if (todolist.Count() == 0)
             {
-                MessageBox.Show(owner, "No tasks found on this page!", pageTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
+                var tasks = from oe in doc.Descendants(ns + "OE")
+                            from item in oe.Elements(ns + "Tag")
+                            where item.Attribute("completed").Value == "false"
+                            select oe;
+
+                if (tasks.Count() == 0)
+                {
+                    MessageBox.Show(owner, "No tasks found on this page!", title, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+
+                foreach (var task in tasks)
+                    todolist.Add(new Todo { content = task.Value });
+
             }
 
 
@@ -543,7 +552,7 @@ namespace OneNoteRibbonAddIn
                     var projects = await client.Projects.GetAsync();
                     var status = "Tasks found: " + todolist.Count().ToString();
 
-                    TasksForm confirm = new TasksForm(pageTitle, status, projects);
+                    TasksForm confirm = new TasksForm(title, status, projects);
                     confirm.ShowDialog(owner);
 
                     if (confirm.DialogResult == DialogResult.OK)
