@@ -518,7 +518,7 @@ namespace OneNoteRibbonAddIn
                 }
 
                 foreach (var task in tasks)
-                    todolist.Add(new Todo { content = task.Value });
+                    todolist.Add(new Todo { content = task.Value, due = "", assignedTo = "" });
 
             }
 
@@ -602,7 +602,7 @@ namespace OneNoteRibbonAddIn
                             projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
                             //await transaction.Sharing.ShareProjectAsync(projectId, "pasitarimai@ardi.lt");
                         }
-               
+
 
                         foreach (var task in todolist)
                         {
