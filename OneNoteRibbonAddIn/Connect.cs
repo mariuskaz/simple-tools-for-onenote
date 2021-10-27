@@ -491,6 +491,17 @@ namespace OneNoteRibbonAddIn
 
             if (gantt != null)
             {
+                var dates = from oe in doc.Descendants(ns + "OEChildren")
+                            from item in oe.Descendants(ns + "Meta")
+                            where item.Attribute("name").Value == "SimpleGanttTable"
+                            select oe;
+
+                if (dates.Count() > 0)
+                {
+                    var startTag = Right(RemoveHtmlTags(dates.Descendants(ns + "T").First().Value), 10);
+                    DateTime.TryParse(startTag, out ganttStart);
+                }
+
                 var rows = gantt.Elements(ns + "Table").Descendants(ns + "Row");
                 foreach (var row in rows)
                 {
@@ -499,8 +510,17 @@ namespace OneNoteRibbonAddIn
                                from tag in cell.Descendants(ns + "Tag")
                                where tag.Attribute("completed").Value == "false"
                                select cell;
+
                     if (tags.Count() > 0)
-                        todolist.Add(new Todo { content = cells.ElementAt(0).Value, assignedTo = cells.ElementAt(3).Value, due = cells.ElementAt(1).Value });
+                    {
+                        var due = cells.ElementAt(1).Value;
+                        var resource = cells.ElementAt(3).Value;
+                        var content = cells.ElementAt(0).Value;
+                        var start = Convert.ToDouble(due);
+                        if (start > 0) due = ganttStart.AddDays(start - 1).ToShortDateString();
+                        todolist.Add(new Todo { content = content, assignedTo = resource, due = due });
+                    }
+                     
                 }
             }
 
