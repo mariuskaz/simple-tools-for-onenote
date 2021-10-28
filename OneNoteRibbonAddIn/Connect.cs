@@ -18,6 +18,7 @@ using System.Net.Http;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using Microsoft.Win32;
 
 namespace OneNoteRibbonAddIn
 {
@@ -448,9 +449,8 @@ namespace OneNoteRibbonAddIn
             }
         }
 
-        String todoist_user = "";
-        String todoist_psw = "";
-        
+        String todoist_key = "";
+
         public async void ExportTasks(IRibbonControl control)
         {
 
@@ -542,53 +542,68 @@ namespace OneNoteRibbonAddIn
 
             }
 
+            RegistryKey registry = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\SimpleTools");
+            if (registry != null)
+            {
+                todoist_key = registry.GetValue("key").ToString();
+                registry.Close();
+            }
 
-            // LOGIN IF NOT //
-            if (todoist_user.Length == 0)
+            // LOGIN IF NO KEY //
+            if (todoist_key.Length == 0)
             {
                 LoginForm login = new LoginForm();
                 login.ShowDialog(owner);
                 if (login.DialogResult == DialogResult.OK)
                 {
-                    if (login.email.Contains("@") == false) login.email += "@ardi.lt";
-                    todoist_user = login.email;
-                    todoist_psw = login.password;
+
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
+
+                    try
+                    {
+                        ITodoistClient client = await tokenlessClient.LoginAsync(login.email, login.password);
+                        var user = await client.Users.GetCurrentAsync();
+                        todoist_key = user.Token;
+                        registry = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\SimpleTools");
+                        registry.SetValue("key", todoist_key);
+                        registry.Close();
+                    }
+                    catch
+                    {
+                        MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+
                     login.Dispose();
                     login = null;
                 }
             }
 
-
-            if (todoist_user.Length > 0)
+            if (todoist_key.Length > 0)
             {
-
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-                ITodoistTokenlessClient tokenlessClient = new TodoistTokenlessClient();
 
                 try
                 {
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    ITodoistClient client = new TodoistClient(todoist_key);
 
-                    ITodoistClient client = await tokenlessClient.LoginAsync(todoist_user, todoist_psw);
                     var projects = await client.Projects.GetAsync();
                     var status = "Tasks found: " + todolist.Count().ToString();
-
+                    
                     TasksForm confirm = new TasksForm(title, status, projects);
                     confirm.ShowDialog(owner);
 
                     if (confirm.DialogResult == DialogResult.OK)
                     {
 
-                        var transaction = client.CreateTransaction();
-                        var user = await client.Users.GetCurrentAsync();
-                        var token = user.Token.ToString();
-
                         // Get all collaborators //
+                        var transaction = client.CreateTransaction();
                         var userDetails = new System.Collections.Hashtable();
                         using (var httpClient = new HttpClient())
                         {
                             using (var request = new HttpRequestMessage(new HttpMethod("POST"), "https://api.todoist.com/sync/v8/sync"))
                             {
-                                request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                                request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + todoist_key);
                                 var contentList = new List<string>();
                                 contentList.Add("sync_token=*");
                                 contentList.Add("resource_types=[\"collaborators\"]");
@@ -669,7 +684,7 @@ namespace OneNoteRibbonAddIn
                 }
                 catch
                 {
-                    MessageBox.Show(owner, "Bad user mail or password...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(owner, "Something went wrong...", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
             }

@@ -21,6 +21,7 @@ namespace OneNoteRibbonAddIn
         private void btnLogin_Click(object sender, EventArgs e)
         {
             email = txtLogin.Text;
+            if (email.Contains("@") == false) email += "@ardi.lt";
             password = txtPassword.Text;
         }
 
