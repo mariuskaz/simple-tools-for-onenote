@@ -491,6 +491,7 @@ namespace OneNoteRibbonAddIn
 
             if (gantt != null)
             {
+                var startTag = "none";
                 var dates = from oe in doc.Descendants(ns + "OEChildren")
                             from item in oe.Descendants(ns + "Meta")
                             where item.Attribute("name").Value == "SimpleGanttTable"
@@ -498,10 +499,10 @@ namespace OneNoteRibbonAddIn
 
                 if (dates.Count() > 0)
                 {
-                    var startTag = Right(RemoveHtmlTags(dates.Descendants(ns + "T").First().Value), 10);
+                    startTag = Right(RemoveHtmlTags(dates.Descendants(ns + "T").First().Value), 10);
                     DateTime.TryParse(startTag, out ganttStart);
                 }
-
+                
                 var rows = gantt.Elements(ns + "Table").Descendants(ns + "Row");
                 foreach (var row in rows)
                 {
@@ -516,8 +517,12 @@ namespace OneNoteRibbonAddIn
                         var due = cells.ElementAt(1).Value;
                         var resource = cells.ElementAt(3).Value;
                         var content = cells.ElementAt(0).Value;
-                        var start = Convert.ToDouble(due);
-                        if (start > 0) due = ganttStart.AddDays(start - 1).ToShortDateString();
+                        if (validDate(startTag))
+                        {
+                            double start;
+                            double.TryParse(due, out start);
+                            if (start > 0) due = ganttStart.AddDays(start - 1).ToShortDateString();
+                        }
                         todolist.Add(new Todo { content = content, assignedTo = resource, due = due });
                     }
                      
@@ -688,7 +693,6 @@ namespace OneNoteRibbonAddIn
                 }
 
             }
-
             
         }
 
@@ -707,6 +711,7 @@ namespace OneNoteRibbonAddIn
 
         private string Right(string str, int x)
         {
+            if (x >= str.Length) return str;
             return str.Substring(str.Length - x);
         }
 
