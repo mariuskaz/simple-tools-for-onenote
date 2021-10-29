@@ -36,6 +36,7 @@
             this.todoProjects = new System.Windows.Forms.ComboBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.addLinks = new System.Windows.Forms.CheckBox();
+            this.addOnlyNew = new System.Windows.Forms.CheckBox();
             this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,7 +46,7 @@
             this.panel3.Controls.Add(this.btnCancel);
             this.panel3.Controls.Add(this.btnOK);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 192);
+            this.panel3.Location = new System.Drawing.Point(0, 205);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(402, 56);
             this.panel3.TabIndex = 14;
@@ -73,7 +74,7 @@
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(98, 30);
             this.btnOK.TabIndex = 0;
-            this.btnOK.Text = "Add tasks";
+            this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
@@ -96,7 +97,7 @@
             // 
             this.txtInfo.AutoSize = true;
             this.txtInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.txtInfo.Location = new System.Drawing.Point(24, 136);
+            this.txtInfo.Location = new System.Drawing.Point(24, 117);
             this.txtInfo.Name = "txtInfo";
             this.txtInfo.Size = new System.Drawing.Size(95, 16);
             this.txtInfo.TabIndex = 21;
@@ -126,13 +127,27 @@
             // 
             this.addLinks.AutoSize = true;
             this.addLinks.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.addLinks.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            this.addLinks.Location = new System.Drawing.Point(27, 160);
+            this.addLinks.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.addLinks.Location = new System.Drawing.Point(27, 168);
             this.addLinks.Name = "addLinks";
-            this.addLinks.Size = new System.Drawing.Size(158, 22);
+            this.addLinks.Size = new System.Drawing.Size(149, 20);
             this.addLinks.TabIndex = 2;
-            this.addLinks.Text = "Add links to onenote";
+            this.addLinks.Text = "Link tasks to onenote";
             this.addLinks.UseVisualStyleBackColor = true;
+            // 
+            // addOnlyNew
+            // 
+            this.addOnlyNew.AutoSize = true;
+            this.addOnlyNew.Checked = true;
+            this.addOnlyNew.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.addOnlyNew.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.addOnlyNew.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            this.addOnlyNew.Location = new System.Drawing.Point(27, 147);
+            this.addOnlyNew.Name = "addOnlyNew";
+            this.addOnlyNew.Size = new System.Drawing.Size(139, 20);
+            this.addOnlyNew.TabIndex = 3;
+            this.addOnlyNew.Text = "Add only new tasks";
+            this.addOnlyNew.UseVisualStyleBackColor = true;
             // 
             // TasksForm
             // 
@@ -140,7 +155,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(402, 248);
+            this.ClientSize = new System.Drawing.Size(402, 261);
+            this.Controls.Add(this.addOnlyNew);
             this.Controls.Add(this.addLinks);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.todoProjects);
@@ -170,5 +186,6 @@
         private System.Windows.Forms.ComboBox todoProjects;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.CheckBox addLinks;
+        private System.Windows.Forms.CheckBox addOnlyNew;
     }
 }

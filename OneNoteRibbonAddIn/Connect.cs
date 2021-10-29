@@ -593,16 +593,17 @@ namespace OneNoteRibbonAddIn
                     ITodoistClient client = new TodoistClient(todoist_key);
 
                     var projects = await client.Projects.GetAsync();
-                    var status = "Tasks found: " + todolist.Count().ToString();
+                    var status = "Tasks found on page: " + todolist.Count().ToString();
                     
                     TasksForm confirm = new TasksForm(title, status, projects);
                     confirm.ShowDialog(owner);
 
                     if (confirm.DialogResult == DialogResult.OK)
                     {
+                        var transaction = client.CreateTransaction();
+                        var projectId = new Todoist.Net.Models.ComplexId();
 
                         // Get all collaborators //
-                        var transaction = client.CreateTransaction();
                         var userDetails = new System.Collections.Hashtable();
                         using (var httpClient = new HttpClient())
                         {
@@ -628,22 +629,34 @@ namespace OneNoteRibbonAddIn
                             }
                         }
 
-                        var projectId = new Todoist.Net.Models.ComplexId();
-                        if (confirm.id > 0)
+
+                        // Check project items //
+                        if (confirm.projectId < 0)
                         {
-                            foreach (var item in projects)
+                            projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
+                        }
+                        else
+                        {
+                            projectId = projects.ElementAt(confirm.projectId).Id;
+                            var data = await client.Projects.GetDataAsync(projectId);
+                            var items = data.Items;
+
+                            if (confirm.updates)
                             {
-                                if (item.Name == confirm.project) projectId = item.Id;
+                                foreach (var item in items)
+                                    todolist = todolist.Where(todo => !sameTask(todo.content, item.Content)).ToList();
+                                
+                                if (todolist.Count() == 0)
+                                {
+                                    MessageBox.Show(owner, "Nothing to export! No new tasks found.", title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    return;
+                                }
+                                
                             }
                         }
 
-                        else
-                        {
-                            projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
-                            //await transaction.Sharing.ShareProjectAsync(projectId, "pasitarimai@ardi.lt");
-                        }
 
-
+                        // Push new tasks //
                         foreach (var task in todolist)
                         {
                             string[] text = task.content.ToString().Split('#');
@@ -724,6 +737,13 @@ namespace OneNoteRibbonAddIn
         {
             Regex regex = new Regex(@"\d\d\d\d-\d\d-\d\d");
             return regex.IsMatch(date);
+        }
+
+        private Boolean sameTask(string todo, string task)
+        {
+            var text1 = RemoveHtmlTags(todo.Split('#')[0]); // Remove comments
+            var text2 = RemoveHtmlTags(task.IndexOf(']') > 0 ? task.Split('[', ']')[1] : task);
+            return text1.Equals(text2);
         }
 
     }

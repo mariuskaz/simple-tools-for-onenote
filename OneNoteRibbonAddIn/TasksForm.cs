@@ -16,8 +16,9 @@ namespace OneNoteRibbonAddIn
     public partial class TasksForm : Form
     {
         public string project;
-        public long id;
+        public int projectId;
         public bool links;
+        public bool updates;
 
         public TasksForm(string project, string info, IEnumerable<Todoist.Net.Models.Project> projects)
         {
@@ -36,22 +37,23 @@ namespace OneNoteRibbonAddIn
         {
             project = txtProject.Text;
             links = addLinks.Checked;
+            updates = addOnlyNew.Checked;
         }
 
         private void changeTitle(object sender, EventArgs e)
         {
             txtProject.Text = todoProjects.Text;
-            id = todoProjects.SelectedIndex;
-            if (id > 0)
-            {
-                txtProject.ReadOnly = true;
-            }
-            else
+            projectId = todoProjects.SelectedIndex - 1;
+            if (projectId < 0)
             {
                 txtProject.ReadOnly = false;
                 txtProject.Text = project;
             }
-            todoProjects.SelectionStart = 2;
+            else
+            {
+                txtProject.ReadOnly = true;
+            }
+            //todoProjects.SelectionStart = 2;
         }
 
     }
