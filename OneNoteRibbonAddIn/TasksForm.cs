@@ -43,8 +43,8 @@ namespace OneNoteRibbonAddIn
         private void changeTitle(object sender, EventArgs e)
         {
             txtProject.Text = todoProjects.Text;
-            projectId = todoProjects.SelectedIndex - 1;
-            if (projectId < 0)
+            projectId = todoProjects.SelectedIndex;
+            if (projectId == 0)
             {
                 txtProject.ReadOnly = false;
                 txtProject.Text = project;

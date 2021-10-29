@@ -631,13 +631,14 @@ namespace OneNoteRibbonAddIn
 
 
                         // Check project items //
-                        if (confirm.projectId < 0)
+                        if (confirm.projectId == 0)
                         {
                             projectId = await transaction.Project.AddAsync(new Todoist.Net.Models.Project(confirm.project));
                         }
                         else
                         {
-                            projectId = projects.ElementAt(confirm.projectId).Id;
+                            var position = confirm.projectId - 1;
+                            projectId = projects.ElementAt(position).Id;
                             var data = await client.Projects.GetDataAsync(projectId);
                             var items = data.Items;
 
